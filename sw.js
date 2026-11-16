@@ -1,4 +1,4 @@
-const CACHE = "nexus-store-v6";
+const CACHE = "nexus-store-v7";
 const FILES = ["./", "index.html", "apps.js", "assets.js", "manifest.json"];
 
 self.addEventListener("install", e => {
