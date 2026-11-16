@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -172,16 +172,26 @@ nav button.on{color:var(--accent);font-weight:700}
 #viewer img{width:100%;height:100%;object-fit:cover}
 .conf{position:fixed;top:-30px;z-index:500;font-size:22px;pointer-events:none;animation:fall 2.2s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+.iconbtn svg,.sico svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.sico{display:flex;color:var(--muted)}
+.cbox svg{width:30px;height:30px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+nav button i{display:flex;height:23px}
+nav button i svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mono{font-family:Poppins,Inter,sans-serif;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.blogo{width:28px;height:28px;border-radius:8px;vertical-align:-8px;margin-right:8px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.dbanner{margin:0 16px 16px;aspect-ratio:2/1;border-radius:20px;background-size:cover;background-position:center;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+#splash .logo{width:96px;height:96px;border-radius:24px;box-shadow:0 12px 34px rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
-<div id="splash"><div class="logo">🚀</div><h1 id="spName"></h1></div>
-<div id="offline">📡 ইন্টারনেট নেই, অফলাইন মোডে আছিস</div>
+<div id="splash"><img id="spLogo" class="logo" alt=""><h1 id="spName"></h1></div>
+<div id="offline">📡 You are offline</div>
 <div id="app"></div>
 <div id="detail"></div>
 <div id="viewer" onclick="this.style.display='none'"></div>
 <nav><div id="nav"></div></nav>
 <div id="toast"></div>
+<script src="assets.js"></script>
 <script src="apps.js"></script>
 <script>
 /* ================= helpers ================= */
@@ -191,12 +201,30 @@ const ls = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
-const bn = n => String(n).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]);
+const bn = n => String(n);
 const fmt = n => n>=1000 ? (n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"K+" : n+"+";
 const safeUrl = u => /^https?:\/\//i.test(u||"") ? u : "#";
-const safeImg = u => /^https?:\/\//i.test(u||"") ? u : "";
+const IMGV = k => (typeof IMG!=="undefined" && IMG[k]) || "";
+const safeImg = u => { u=String(u||""); if(u.indexOf("img:")===0) return IMGV(u.slice(4)); return /^https?:\/\//i.test(u) ? u : ""; };
+const isImgRef = u => /^(https?:\/\/|img:)/i.test(String(u||""));
+const cssUrl = t => /^[^'"()\s\\]+$/.test(t||"") ? t : "";
+const SVG = {
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+  share:'<path d="M12 15V4M8 8l4-4 4 4M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  home:'<path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  explore:'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  library:'<rect x="4" y="4" width="5" height="16" rx="1.5"/><rect x="11" y="4" width="5" height="16" rx="1.5"/><path d="m18 6.2 2.6.8-3.2 12.4-2.4-.6"/>',
+  profile:'<circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c.8-4 4-5.5 7.5-5.5s6.7 1.5 7.5 5.5"/>',
+  dumbbell:'<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',
+  tools:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  game:'<rect x="3" y="8" width="18" height="10" rx="5"/><path d="M8 11v4M6 13h4"/><circle cx="15.5" cy="12" r=".7"/><circle cx="17.5" cy="14" r=".7"/>',
+  book:'<path d="M5 4h13a1 1 0 0 1 1 1v14H6a2 2 0 0 0-2 2V5a1 1 0 0 1 1-1z"/><path d="M8 8h7"/>',
+  grid:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>'
+};
+const svgI = p => `<svg viewBox="0 0 24 24">${p}</svg>`;
 const PALETTE=[["#7c3aed","#2563eb"],["#ef4444","#f97316"],["#06b6d4","#3b82f6"],["#10b981","#059669"],["#ec4899","#8b5cf6"],["#f59e0b","#ef4444"],["#14b8a6","#6366f1"],["#64748b","#0f172a"]];
-const PAL_NAMES=["বেগুনি-নীল","লাল-কমলা","আকাশি-নীল","সবুজ","গোলাপি-বেগুনি","হলুদ-লাল","টিল-নীল","ধূসর-কালো"];
+const PAL_NAMES=["Purple-blue","Red-orange","Sky blue","Green","Pink-purple","Yellow-red","Teal-blue","Gray-black"];
 const grad = a => { const c=(a.color||[]).map(x=>/^#[0-9a-f]{3,8}$/i.test(x)?x:"#6366f1"); return `linear-gradient(135deg,${c[0]||"#6366f1"},${c[1]||c[0]||"#22d3a0"})`; };
 const vib = ms => { try{ navigator.vibrate&&navigator.vibrate(ms); }catch(e){} };
 const toast = m => { const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove("show"),2600); };
@@ -205,23 +233,27 @@ const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-
 
 /* ================= state ================= */
 const CLOUD = !!(STORE.firebase && STORE.firebase.projectId);
-let user=null;                                   // লগইন করা ইউজার
+let user=null;                                   // logged-in user
 let cloudApps = CLOUD ? ls.get("capps",null) : null;
 let adminApps=[], myApps=[], reports=[], ucount=null;
-let extra = ls.get("extraApps",[]);              // লোকাল মোডে টেস্ট অ্যাপ
+let extra = ls.get("extraApps",[]);              // test apps in local mode
 let installed=ls.get("installed",[]), iver=ls.get("iver",{}), wish=ls.get("wish",[]);
 let myRate=ls.get("rates",{}), myRev=ls.get("reviews",{}), hist=ls.get("hist",[]), xp=ls.get("xp",0);
 let cstats={}, creviews={}, crevLoaded={}, mine={}, drafts={};
 let counted=ls.get("counted",[]);
-let tab="home", cat="সব", query="", sortBy="popular", libTab="installed", dtab="ov", editing=null;
+let tab="home", cat="All", query="", sortBy="popular", libTab="installed", dtab="ov", editing=null;
 
 const isAdmin = () => !!(user && STORE.adminEmail && user.email && user.email.toLowerCase()===String(STORE.adminEmail).trim().toLowerCase());
 const baseApps = () => (CLOUD && cloudApps && cloudApps.length) ? cloudApps : APPS;
 const all = () => CLOUD ? baseApps() : [...APPS, ...extra];
 const byId = id => all().find(a=>a.id===id) || adminApps.find(a=>a.id===id) || myApps.find(a=>a.id===id);
-const cats = () => ["সব", ...new Set(all().map(a=>a.cat))];
-const catIcon = c => (STORE.catIcons&&STORE.catIcons[c]) || "📦";
-const icon = a => safeImg(a.icon) ? `<img src="${esc(safeImg(a.icon))}" alt="">` : esc(a.emoji||"📱");
+const cats = () => ["All", ...new Set(all().map(a=>a.cat))];
+const catIcon = c => { const n=String(c||""); return svgI(/fit|gym|health|sport/i.test(n)?SVG.dumbbell:/tool|util|product/i.test(n)?SVG.tools:/game/i.test(n)?SVG.game:/edu|learn|book|school/i.test(n)?SVG.book:SVG.grid); };
+const iconSrc = a => safeImg(a.icon) || IMGV(a.id+"-icon");
+const bannerSrc = a => safeImg(a.banner) || IMGV(a.id+"-banner");
+const shotsOf = a => { const l=(a.screenshots||[]).map(safeImg).filter(Boolean); return l.length ? l : [1,2,3].map(i=>IMGV(a.id+"-"+i)).filter(Boolean); };
+const icon = a => { const t=iconSrc(a); return t ? `<img src="${esc(t)}" alt="">` : `<span class="mono">${esc((a.name||"?").trim().charAt(0).toUpperCase())}</span>`; };
+const slideBg = a => { const b=cssUrl(bannerSrc(a)); return b ? `linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,.06) 68%),url('${b}') center/cover` : grad(a); };
 const dl = a => (+a.downloads||0) + ((cstats[a.id]&&cstats[a.id].downloads)||0);
 const reviewsOf = id => CLOUD ? (creviews[id]||[]) : (myRev[id]||[]);
 const avg = a => {
@@ -230,12 +262,12 @@ const avg = a => {
   if(!CLOUD){ const rs=reviewsOf(a.id); return base || (rs.length ? rs.reduce((t,r)=>t+r.stars,0)/rs.length : 0); }
   return base;
 };
-const rt = a => { const v=avg(a); return v>0 ? v.toFixed(1) : "নতুন"; };
+const rt = a => { const v=avg(a); return v>0 ? v.toFixed(1) : "New"; };
 const hasUpdate = a => installed.includes(a.id) && iver[a.id] && iver[a.id] !== a.version;
 const updates = () => all().filter(hasUpdate);
-const BADGES = {editor:"🏆 এডিটর'স চয়েস",hot:"🔥 হট",new:"🆕 নতুন",verified:"✔ ভেরিফাইড"};
+const BADGES = {editor:"🏆 Editor's Choice",hot:"🔥 Hot",new:"🆕 New",verified:"✔ Verified"};
 const badge = a => a.badge && BADGES[a.badge] ? `<span class="badge ${esc(a.badge)}">${BADGES[a.badge]}</span>` : "";
-const priceTxt = a => a.price>0 ? "₹"+bn(a.price) : "বিনামূল্যে";
+const priceTxt = a => a.price>0 ? "₹"+bn(a.price) : "Free";
 
 /* ================= XP / rank / sync ================= */
 const RANKS=[["E",0],["D",100],["C",250],["B",500],["A",900],["S",1500]];
@@ -251,7 +283,7 @@ function persist(){
 function addXP(n){
   const before=rankOf(xp); xp+=n; persist();
   const after=rankOf(xp);
-  if(after>before){ confetti(); vib([80,40,80]); toast(`🎊 র‍্যাঙ্ক আপ! এখন তুই ${RANKS[after][0]}-র‍্যাঙ্ক হান্টার`); }
+  if(after>before){ confetti(); vib([80,40,80]); toast(`🎊 Rank up! You reached rank ${RANKS[after][0]}!`); }
   else toast(`+${bn(n)} XP ✨`);
 }
 
@@ -291,100 +323,100 @@ async function handleUser(u){
   if(detailOpen&&cur) openApp(cur.id);
 }
 async function login(){
-  if(!window.cloud){ toast("ক্লাউড কানেক্ট হয়নি, ইন্টারনেট চেক করে আবার চেষ্টা কর"); return; }
+  if(!window.cloud){ toast("Could not reach the cloud. Check your internet and try again"); return; }
   try{ await window.cloud.login(); }
-  catch(e){ console.warn(e); toast(e&&e.code==="auth/unauthorized-domain" ? "⚠️ Firebase-এ তোর সাইটের ডোমেইন Authorized করা হয়নি (ধাপ ৪ দেখ)" : "লগইন হয়নি, আবার চেষ্টা কর"); }
+  catch(e){ console.warn(e); toast(e&&e.code==="auth/unauthorized-domain" ? "⚠️ Your site domain is not authorized in Firebase (Authentication > Settings > Authorized domains)" : "Login failed, try again"); }
 }
-async function logout(){ if(!confirm("লগআউট করবি?")) return; try{ await window.cloud.logout(); }catch(e){} toast("লগআউট হয়েছে"); go("home"); }
+async function logout(){ if(!confirm("Log out?")) return; try{ await window.cloud.logout(); }catch(e){} toast("Logged out"); go("home"); }
 
 /* ================= UI pieces ================= */
 const tile = a => `<button class="tile" onclick="openApp('${a.id}')"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><b>${esc(a.name)}</b><span>⭐ ${rt(a)} • ${esc(a.size)}</span></button>`;
-const rowApp = (a,i) => `<div class="row" onclick="openApp('${a.id}')">${i!=null?`<div class="rank">${bn(i+1)}</div>`:""}<div class="ico" style="background:${grad(a)}">${icon(a)}</div><div class="meta"><b>${esc(a.name)}${badge(a)}</b><p>${esc(a.desc)}</p><small>⭐ ${rt(a)} • ${fmt(dl(a))} • ${esc(a.size)} • ${priceTxt(a)}</small></div><span class="pill ${hasUpdate(a)?"upd":installed.includes(a.id)?"done":""}">${hasUpdate(a)?"আপডেট":installed.includes(a.id)?"✔":"পাও"}</span></div>`;
+const rowApp = (a,i) => `<div class="row" onclick="openApp('${a.id}')">${i!=null?`<div class="rank">${bn(i+1)}</div>`:""}<div class="ico" style="background:${grad(a)}">${icon(a)}</div><div class="meta"><b>${esc(a.name)}${badge(a)}</b><p>${esc(a.desc)}</p><small>⭐ ${rt(a)} • ${fmt(dl(a))} • ${esc(a.size)} • ${priceTxt(a)}</small></div><span class="pill ${hasUpdate(a)?"upd":installed.includes(a.id)?"done":""}">${hasUpdate(a)?"Update":installed.includes(a.id)?"✔":"Get"}</span></div>`;
 const head = (t,btn) => `<div class="sec-h"><h2>${t}</h2>${btn||""}</div>`;
 const avatarInner = () => user&&safeImg(user.photo) ? `<img src="${esc(safeImg(user.photo))}" referrerpolicy="no-referrer" alt="">` : esc((user&&user.name||"?").charAt(0).toUpperCase());
 function topbar(){
   const r=RANKS[rankOf(xp)][0];
-  return `<div class="top"><div class="brand">🚀 <span>${esc(STORE.name)}</span></div><span class="rankpill">${r} • ${bn(xp)} XP</span><button class="iconbtn" onclick="go('search')">🔍</button>${user?`<button class="avatar iconbtn" onclick="go('settings')">${avatarInner()}</button>`:""}</div>`;
+  return `<div class="top"><div class="brand"><img class="blogo" src="${IMGV("store")}" alt=""><span>${esc(STORE.name)}</span></div><span class="rankpill">${r} • ${bn(xp)} XP</span><button class="iconbtn" onclick="go('search')">${svgI(SVG.search)}</button>${user?`<button class="avatar iconbtn" onclick="go('settings')">${avatarInner()}</button>`:""}</div>`;
 }
-const loginCard = why => `<div class="login"><div style="font-size:42px">🔐</div><h3>${esc(why||"লগইন কর")}</h3><p>Google দিয়ে এক ট্যাপে লগইন। তোর XP, লাইব্রেরি আর উইশলিস্ট সব ডিভাইসে সেভ থাকবে, রিভিউ দিতে পারবি, নিজের অ্যাপও পাবলিশ করতে পারবি।</p><button class="gbtn" onclick="login()"><b>G</b> Google দিয়ে চালিয়ে যাও</button></div>`;
+const loginCard = why => `<div class="login"><div style="font-size:42px">🔐</div><h3>${esc(why||"Log in")}</h3><p>Log in with Google in one tap. Your XP, library and wishlist are saved on all your devices, and you can write reviews and publish your own apps.</p><button class="gbtn" onclick="login()"><b>G</b> Continue with Google</button></div>`;
 
 /* ================= views ================= */
 function viewHome(){
-  const list=all(); if(!list.length) return topbar()+`<div class="empty"><big>📭</big>এখনো কোনো অ্যাপ নেই</div>`;
+  const list=all(); if(!list.length) return topbar()+`<div class="empty"><big>📭</big>No apps yet</div>`;
   const feat=list.filter(a=>a.featured); const heroApps=feat.length?feat:list.slice(0,3);
   const trending=[...list].sort((a,b)=>dl(b)-dl(a));
   const fresh=[...list].sort((a,b)=>(b.updated||"").localeCompare(a.updated||""));
   const day=Math.floor(Date.now()/86400000); const aod=list[day%list.length];
   const cols=(STORE.collections||[]).map(c=>({t:c.title,apps:c.ids.map(byId).filter(Boolean)})).filter(c=>c.apps.length);
   return topbar()+`
-  <div class="hero" id="hero">${heroApps.map(a=>`<div class="slide" style="background:${grad(a)}" onclick="openApp('${a.id}')"><div class="big">${a.icon?"":esc(a.emoji||"📱")}</div><small>⭐ বাছাই করা</small><h3>${esc(a.name)}</h3><p>${esc(a.desc)}</p><span class="go">দেখো</span></div>`).join("")}</div>
+  <div class="hero" id="hero">${heroApps.map(a=>`<div class="slide" style="background:${slideBg(a)}" onclick="openApp('${a.id}')"><small>⭐ Featured</small><h3>${esc(a.name)}</h3><p>${esc(a.desc)}</p><span class="go">View</span></div>`).join("")}</div>
   <div class="dots" id="dots">${heroApps.map((_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>
-  ${CLOUD&&!user?`<div class="guest"><span style="font-size:26px">🎁</span><div style="flex:1">লগইন করলে XP, লাইব্রেরি সব ডিভাইসে সেভ থাকবে আর রিভিউ দিতে পারবি।</div><button onclick="login()">লগইন</button></div>`:""}
-  <div class="aod" style="background:${grad(aod)}" onclick="openApp('${aod.id}')"><div class="ico">${icon(aod)}</div><div><small>🌟 আজকের অ্যাপ</small><h3>${esc(aod.name)}</h3><p>${esc(aod.desc)}</p><span class="go">এখনই দেখো</span></div></div>
-  ${head("🔥 ট্রেন্ডিং")}<div class="hrow">${trending.map(tile).join("")}</div>
+  ${CLOUD&&!user?`<div class="guest"><span style="font-size:26px">🎁</span><div style="flex:1">Log in to save your XP and library on all devices and to write reviews.</div><button onclick="login()">Log in</button></div>`:""}
+  <div class="aod" style="background:${grad(aod)}" onclick="openApp('${aod.id}')"><div class="ico">${icon(aod)}</div><div><small>🌟 App of the Day</small><h3>${esc(aod.name)}</h3><p>${esc(aod.desc)}</p><span class="go">View now</span></div></div>
+  ${head("🔥 Trending")}<div class="hrow">${trending.map(tile).join("")}</div>
   ${cols.map(c=>head(esc(c.t))+`<div class="hrow">${c.apps.map(tile).join("")}</div>`).join("")}
-  ${head("🏆 টপ চার্ট",`<button onclick="go('explore')">সব দেখো</button>`)}${trending.slice(0,5).map((a,i)=>rowApp(a,i)).join("")}
-  ${head("🆕 নতুন ও আপডেট")}<div class="hrow">${fresh.map(tile).join("")}</div>`;
+  ${head("🏆 Top Charts",`<button onclick="go('explore')">See all</button>`)}${trending.slice(0,5).map((a,i)=>rowApp(a,i)).join("")}
+  ${head("🆕 New and Updated")}<div class="hrow">${fresh.map(tile).join("")}</div>`;
 }
 function setCat(i){ cat=cats()[i]; render(); }
 function viewExplore(){
-  let list=all().filter(a=>cat==="সব"||a.cat===cat);
+  let list=all().filter(a=>cat==="All"||a.cat===cat);
   const s={popular:(a,b)=>dl(b)-dl(a),rating:(a,b)=>avg(b)-avg(a),new:(a,b)=>(b.updated||"").localeCompare(a.updated||""),name:(a,b)=>a.name.localeCompare(b.name)}[sortBy];
   list.sort(s);
   const cs=cats();
-  return topbar()+head("🧭 এক্সপ্লোর")+
-  (cat==="সব"?`<div class="cgrid">${cs.slice(1).map((c,i)=>`<button class="cbox" onclick="setCat(${i+1})"><big>${catIcon(c)}</big><b>${esc(c)}</b><span>${bn(all().filter(a=>a.cat===c).length)}টি অ্যাপ</span></button>`).join("")}</div><div style="height:8px"></div>`:"")+
+  return topbar()+head("🧭 Explore")+
+  (cat==="All"?`<div class="cgrid">${cs.slice(1).map((c,i)=>`<button class="cbox" onclick="setCat(${i+1})"><big>${catIcon(c)}</big><b>${esc(c)}</b><span>${bn(all().filter(a=>a.cat===c).length)} apps</span></button>`).join("")}</div><div style="height:8px"></div>`:"")+
   `<div class="chips">${cs.map((c,i)=>`<button class="chip ${c===cat?"on":""}" onclick="setCat(${i})">${esc(c)}</button>`).join("")}</div>
-  <select class="sort" onchange="sortBy=this.value;render()"><option value="popular" ${sortBy=="popular"?"selected":""}>সবচেয়ে জনপ্রিয়</option><option value="rating" ${sortBy=="rating"?"selected":""}>সেরা রেটিং</option><option value="new" ${sortBy=="new"?"selected":""}>নতুন আগে</option><option value="name" ${sortBy=="name"?"selected":""}>নাম অনুযায়ী</option></select>
-  ${list.length?list.map((a,i)=>rowApp(a,i)).join(""):`<div class="empty"><big>😕</big>এই ক্যাটাগরিতে কিছু নেই</div>`}`;
+  <select class="sort" onchange="sortBy=this.value;render()"><option value="popular" ${sortBy=="popular"?"selected":""}>Most popular</option><option value="rating" ${sortBy=="rating"?"selected":""}>Top rated</option><option value="new" ${sortBy=="new"?"selected":""}>Newest first</option><option value="name" ${sortBy=="name"?"selected":""}>By name</option></select>
+  ${list.length?list.map((a,i)=>rowApp(a,i)).join(""):`<div class="empty"><big>😕</big>Nothing in this category</div>`}`;
 }
 function viewSearch(){
-  return topbar()+`<div class="sbox"><span>🔍</span><input id="qi" placeholder="অ্যাপ বা ক্যাটাগরি খোঁজ..." value="${esc(query)}" oninput="query=this.value;doSearch()"><button class="iconbtn" onclick="voice()">🎤</button></div><div id="sres"></div>`;
+  return topbar()+`<div class="sbox"><span class="sico">${svgI(SVG.search)}</span><input id="qi" placeholder="Search apps or categories..." value="${esc(query)}" oninput="query=this.value;doSearch()"><button class="iconbtn" onclick="voice()">${svgI(SVG.mic)}</button></div><div id="sres"></div>`;
 }
 function setQ(v){ query=v; render(); }
 function doSearch(){
   const q=query.trim().toLowerCase();
   const r=q?all().filter(a=>(a.name+a.desc+a.cat+a.dev).toLowerCase().includes(q)):[];
   $("#sres").innerHTML = !q
-    ? (hist.length?head("🕘 আগের সার্চ",`<button onclick="hist=[];ls.set('hist',hist);render()">মুছো</button>`)+`<div class="chips">${hist.map(h=>`<button class="chip" onclick="setQ(this.textContent)">${esc(h)}</button>`).join("")}</div>`:"")+head("🔥 জনপ্রিয় ক্যাটাগরি")+`<div class="chips">${cats().slice(1).map(c=>`<button class="chip" onclick="setQ(this.textContent)">${esc(c)}</button>`).join("")}</div>`
-    : r.length ? r.map(a=>rowApp(a)).join("") : `<div class="empty"><big>🔎</big>"${esc(query)}" নামে কিছু পাওয়া যায়নি</div>`;
+    ? (hist.length?head("🕘 Recent searches",`<button onclick="hist=[];ls.set('hist',hist);render()">Delete</button>`)+`<div class="chips">${hist.map(h=>`<button class="chip" onclick="setQ(this.textContent)">${esc(h)}</button>`).join("")}</div>`:"")+head("🔥 Popular categories")+`<div class="chips">${cats().slice(1).map(c=>`<button class="chip" onclick="setQ(this.textContent)">${esc(c)}</button>`).join("")}</div>`
+    : r.length ? r.map(a=>rowApp(a)).join("") : `<div class="empty"><big>🔎</big>"${esc(query)}" - nothing found</div>`;
 }
 function voice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ toast("এই ব্রাউজারে ভয়েস সার্চ চলে না"); return; }
-  const r=new SR(); r.lang="bn-BD"; r.onresult=e=>{ query=e.results[0][0].transcript; render(); }; r.onerror=()=>toast("শুনতে পাইনি, আবার বল"); toast("🎤 বল..."); r.start();
+  if(!SR){ toast("Voice search is not supported in this browser"); return; }
+  const r=new SR(); r.lang="en-US"; r.onresult=e=>{ query=e.results[0][0].transcript; render(); }; r.onerror=()=>toast("Could not hear you, try again"); toast("🎤 Speak..."); r.start();
 }
 function viewLibrary(){
   const L = libTab==="installed"?installed.map(byId).filter(Boolean) : libTab==="updates"?updates() : wish.map(byId).filter(Boolean);
-  const msg={installed:["📭","এখনো কোনো অ্যাপ ইনস্টল করিসনি"],updates:["✅","সব অ্যাপ লেটেস্ট ভার্সনে আছে"],wish:["💝","পছন্দের অ্যাপে ♡ চাপ দে"]}[libTab];
-  return topbar()+head("📚 আমার লাইব্রেরি")+
-  `<div class="chips"><button class="chip ${libTab=="installed"?"on":""}" onclick="libTab='installed';render()">ইনস্টল (${bn(installed.length)})</button><button class="chip ${libTab=="updates"?"on":""}" onclick="libTab='updates';render()">আপডেট (${bn(updates().length)})</button><button class="chip ${libTab=="wish"?"on":""}" onclick="libTab='wish';render()">উইশলিস্ট (${bn(wish.length)})</button></div>`+
+  const msg={installed:["📭","You have not installed any app yet"],updates:["✅","All apps are up to date"],wish:["💝","Tap the heart on apps you like"]}[libTab];
+  return topbar()+head("📚 My Library")+
+  `<div class="chips"><button class="chip ${libTab=="installed"?"on":""}" onclick="libTab='installed';render()">Installed (${bn(installed.length)})</button><button class="chip ${libTab=="updates"?"on":""}" onclick="libTab='updates';render()">Updates (${bn(updates().length)})</button><button class="chip ${libTab=="wish"?"on":""}" onclick="libTab='wish';render()">Wishlist (${bn(wish.length)})</button></div>`+
   (L.length?L.map(a=>rowApp(a)).join(""):`<div class="empty"><big>${msg[0]}</big>${msg[1]}</div>`);
 }
 let deferredPrompt=null;
 window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferredPrompt=e; });
-function installStore(){ if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; } else toast("Chrome-এর ৩ ডটে ট্যাপ করে 'Add to Home screen' দে"); }
+function installStore(){ if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; } else toast("Open the Chrome menu (3 dots) and tap Add to Home screen"); }
 function viewSettings(){
   const i=rankOf(xp), cur0=RANKS[i][1], nxt=RANKS[i+1]?RANKS[i+1][1]:null;
   const pct=nxt?Math.round((xp-cur0)/(nxt-cur0)*100):100;
   const acct = !CLOUD ? "" : user
     ? `<div class="ucard"><div class="avatar" style="width:52px;height:52px;font-size:20px">${avatarInner()}</div><div class="meta"><b>${esc(user.name)}${isAdmin()?" 👑":""}</b><small>${esc(user.email)}</small></div></div>`
-    : loginCard("লগইন কর");
-  return topbar()+head("👤 আমার প্রোফাইল")+acct+`
-  <div class="prof"><div class="r">${RANKS[i][0]}</div><b style="font-size:18px">হান্টার র‍্যাঙ্ক</b><div style="font-size:13px;opacity:.9;margin-top:2px">${bn(xp)} XP ${nxt?`• পরের র‍্যাঙ্কে ${bn(nxt-xp)} XP বাকি`:"• সর্বোচ্চ র‍্যাঙ্ক! 👑"}</div><div class="xpbar"><i style="width:${pct}%"></i></div><div style="font-size:12px;opacity:.85;margin-top:10px">ইনস্টল +২০ • রিভিউ +১৫ • উইশলিস্ট +৩</div></div>
-  ${head("⚙️ সেটিংস")}<div class="set">
-    ${CLOUD&&user?`<button onclick="openDash()">📊 ${isAdmin()?"অ্যাডমিন ড্যাশবোর্ড":"আমার অ্যাপ ও ড্যাশবোর্ড"} <span>›</span></button>`:""}
-    ${!CLOUD?`<button onclick="adminOpen()">🛠️ অ্যাডমিন প্যানেল (লোকাল) <span>›</span></button>`:""}
-    <button onclick="setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');render()">🌗 থিম বদলা <span>${document.documentElement.dataset.theme==="dark"?"ডার্ক":"লাইট"}</span></button>
-    <button onclick="installStore()">📲 স্টোরকে অ্যাপ হিসেবে ইনস্টল কর <span>›</span></button>
-    ${CLOUD&&user?`<button onclick="logout()">🚪 লগআউট <span>›</span></button>`:""}
-    <button onclick="if(confirm('এই ফোনের ডাটা মুছবে? (ইনস্টল, XP, উইশলিস্ট)')){localStorage.clear();location.reload()}">🗑️ এই ফোনের ডাটা মুছে ফেল <span>›</span></button>
-  </div><div class="empty">${esc(STORE.name)} • ${bn(all().length)}টি অ্যাপ<br>${esc(STORE.tagline)}<br><small>${CLOUD?(window.cloud?"☁️ ক্লাউড চালু":"☁️ ক্লাউড কানেক্ট হচ্ছে..."):"📱 লোকাল মোড (ডাটা শুধু এই ফোনে)"}</small><br><small>রিভিউতে তোর নাম ও ছবি সবাই দেখবে, ইমেইল কেউ দেখবে না।</small></div>`;
+    : loginCard("Log in");
+  return topbar()+head("👤 My Profile")+acct+`
+  <div class="prof"><div class="r">${RANKS[i][0]}</div><b style="font-size:18px">Hunter rank</b><div style="font-size:13px;opacity:.9;margin-top:2px">${bn(xp)} XP ${nxt?`• Next rank: ${bn(nxt-xp)} XP to go`:"• Max rank! 👑"}</div><div class="xpbar"><i style="width:${pct}%"></i></div><div style="font-size:12px;opacity:.85;margin-top:10px">Install +20 • Review +15 • Wishlist +3</div></div>
+  ${head("⚙️ Settings")}<div class="set">
+    ${CLOUD&&user?`<button onclick="openDash()">📊 ${isAdmin()?"Admin dashboard":"My apps and dashboard"} <span>›</span></button>`:""}
+    ${!CLOUD?`<button onclick="adminOpen()">🛠️ Admin panel (local) <span>›</span></button>`:""}
+    <button onclick="setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');render()">🌗 Theme <span>${document.documentElement.dataset.theme==="dark"?"Dark":"Light"}</span></button>
+    <button onclick="installStore()">📲 Install the store as an app <span>›</span></button>
+    ${CLOUD&&user?`<button onclick="logout()">🚪 Log out <span>›</span></button>`:""}
+    <button onclick="if(confirm('Delete the data on this phone? (installs, XP, wishlist)')){localStorage.clear();location.reload()}">🗑️ Delete data on this phone <span>›</span></button>
+  </div><div class="empty">${esc(STORE.name)} • ${bn(all().length)} apps<br>${esc(STORE.tagline)}<br><small>${CLOUD?(window.cloud?"☁️ Cloud connected":"☁️ Connecting to cloud..."):"📱 Local mode (data stays on this phone)"}</small><br><small>Your name and photo are shown on your reviews. Your email is never shown.</small></div>`;
 }
 
 /* ================= dashboard ================= */
 async function openDash(){
-  if(!user){ toast("আগে লগইন কর"); return; }
+  if(!user){ toast("Please log in first"); return; }
   tab="dash"; dtab=isAdmin()?"ov":"mine"; editing=null; render(); window.scrollTo(0,0);
   await refreshDash();
 }
@@ -396,97 +428,97 @@ async function refreshDash(){
       try{ ucount=await window.cloud.countUsers(); }catch(e){ ucount=null; }
     } else { myApps=await window.cloud.getApps("mine",user.uid); }
     cstats=await window.cloud.loadStats();
-  }catch(e){ console.warn(e); toast("ড্যাশবোর্ড লোড হয়নি, ইন্টারনেট/রুলস চেক কর"); }
+  }catch(e){ console.warn(e); toast("Could not load the dashboard. Check internet and Firebase rules"); }
   if(tab==="dash") render();
 }
 function setD(k){ dtab=k; if(k==="new") editing=null; render(); }
 function findDash(id){ return adminApps.find(a=>a.id===id)||myApps.find(a=>a.id===id); }
 function editApp(id){ const a=findDash(id); if(!a) return; editing=a; dtab="new"; render(); window.scrollTo(0,0); }
 async function delApp(id){
-  if(!confirm("এই অ্যাপ মুছে ফেলবি? এটা ফেরানো যাবে না")) return;
-  try{ await window.cloud.delApp(id); toast("🗑️ মোছা হয়েছে"); await refreshDash(); loadPublic(); }catch(e){ toast("❌ মোছা যায়নি"); }
+  if(!confirm("Delete this app? This cannot be undone")) return;
+  try{ await window.cloud.delApp(id); toast("🗑️ Deleted"); await refreshDash(); loadPublic(); }catch(e){ toast("❌ Could not delete"); }
 }
 async function setStatus(id,st){
   const a=findDash(id); if(!a) return;
-  try{ await window.cloud.saveApp({...a,status:st}); toast(st==="published"?"✅ পাবলিশ হয়েছে":"🙈 লুকানো হয়েছে"); await refreshDash(); loadPublic(); }catch(e){ toast("❌ হয়নি"); }
+  try{ await window.cloud.saveApp({...a,status:st}); toast(st==="published"?"✅ Published":"🙈 Hidden"); await refreshDash(); loadPublic(); }catch(e){ toast("❌ Failed"); }
 }
 async function toggleFeat(id){
   const a=findDash(id); if(!a) return;
-  try{ await window.cloud.saveApp({...a,featured:!a.featured}); await refreshDash(); loadPublic(); }catch(e){ toast("❌ হয়নি"); }
+  try{ await window.cloud.saveApp({...a,featured:!a.featured}); await refreshDash(); loadPublic(); }catch(e){ toast("❌ Failed"); }
 }
 async function importSeed(){
-  if(!confirm(`apps.js-এর ${APPS.length}টা অ্যাপ ক্লাউডে তুলবি?`)) return;
+  if(!confirm(`Import the ${APPS.length} sample apps from apps.js to the cloud?`)) return;
   const list=APPS.map(a=>({...a,status:"published",ownerUid:user.uid,createdAt:Date.now()}));
-  try{ await window.cloud.importApps(list); toast("✅ ইমপোর্ট হয়েছে"); await refreshDash(); loadPublic(); }catch(e){ console.warn(e); toast("❌ ইমপোর্ট হয়নি (রুলস/অ্যাডমিন ইমেইল চেক কর)"); }
+  try{ await window.cloud.importApps(list); toast("✅ Imported"); await refreshDash(); loadPublic(); }catch(e){ console.warn(e); toast("❌ Import failed (check rules and admin email)"); }
 }
-async function dropReport(id){ try{ await window.cloud.delReport(id); reports=reports.filter(r=>r._id!==id); render(); }catch(e){ toast("❌ হয়নি"); } }
+async function dropReport(id){ try{ await window.cloud.delReport(id); reports=reports.filter(r=>r._id!==id); render(); }catch(e){ toast("❌ Failed"); } }
 
 function drow(a){
   const adm=isAdmin(), pub=a.status==="published";
-  return `<div class="drow"><div class="ico" style="background:${grad(a)}" onclick="openApp('${a.id}')">${icon(a)}</div><div class="meta"><b>${esc(a.name)}</b> <span class="st ${pub?"ok":"wait"}">${pub?"✔ পাবলিশড":"⏳ পেন্ডিং"}</span><small>⭐ ${rt(a)} • ${fmt(dl(a))} ডাউনলোড • v${esc(a.version)}${adm&&a.dev?" • "+esc(a.dev):""}</small><div class="acts"><button onclick="editApp('${a.id}')">✏️ এডিট</button>${adm?(pub?`<button onclick="setStatus('${a.id}','pending')">🙈 লুকাও</button>`:`<button class="ok" onclick="setStatus('${a.id}','published')">✅ পাবলিশ</button>`)+`<button onclick="toggleFeat('${a.id}')">${a.featured?"⭐ ফিচার বন্ধ":"☆ ফিচার কর"}</button>`:""}<button class="bad" onclick="delApp('${a.id}')">🗑️</button></div></div></div>`;
+  return `<div class="drow"><div class="ico" style="background:${grad(a)}" onclick="openApp('${a.id}')">${icon(a)}</div><div class="meta"><b>${esc(a.name)}</b> <span class="st ${pub?"ok":"wait"}">${pub?"✔ Published":"⏳ Pending"}</span><small>⭐ ${rt(a)} • ${fmt(dl(a))} downloads • v${esc(a.version)}${adm&&a.dev?" • "+esc(a.dev):""}</small><div class="acts"><button onclick="editApp('${a.id}')">✏️ Edit</button>${adm?(pub?`<button onclick="setStatus('${a.id}','pending')">🙈 Hide</button>`:`<button class="ok" onclick="setStatus('${a.id}','published')">✅ Publish</button>`)+`<button onclick="toggleFeat('${a.id}')">${a.featured?"⭐ Unfeature":"☆ Feature"}</button>`:""}<button class="bad" onclick="delApp('${a.id}')">🗑️</button></div></div></div>`;
 }
 function ovHTML(){
   const pubs=adminApps.filter(a=>a.status==="published"), pend=adminApps.length-pubs.length;
   const sv=Object.values(cstats), rc=sv.reduce((s,x)=>s+(x.ratingCount||0),0), rsum=sv.reduce((s,x)=>s+(x.ratingSum||0),0);
   const totalDl=pubs.reduce((s,a)=>s+dl(a),0);
   const top5=[...pubs].sort((a,b)=>dl(b)-dl(a)).slice(0,5), mx=Math.max(1,...top5.map(dl));
-  const kp=[["📦","পাবলিশড অ্যাপ",bn(pubs.length)],["⬇️","মোট ডাউনলোড",bn(totalDl)],["👥","মোট ইউজার",ucount==null?"—":bn(ucount)],["⏳","পেন্ডিং অ্যাপ",bn(pend)],["🚩","রিপোর্ট",bn(reports.length)],["⭐","গড় রেটিং",rc?bn((rsum/rc).toFixed(1)):"—"]];
-  const seed=(!adminApps.length&&APPS.length)?`<div class="card2" style="margin-top:10px"><b style="color:var(--text)">🚀 শুরু করার জন্য</b><br>ক্লাউডে এখনো কোনো অ্যাপ নেই। apps.js-এর ${bn(APPS.length)}টা নমুনা অ্যাপ এক ক্লিকে তুলে নে, তারপর সব ড্যাশবোর্ড থেকেই ম্যানেজ করবি।<div style="margin-top:10px"><button class="btn" style="width:100%" onclick="importSeed()">⬆️ নমুনা অ্যাপ ইমপোর্ট কর</button></div></div>`:"";
+  const kp=[["📦","Published apps",bn(pubs.length)],["⬇️","Total downloads",bn(totalDl)],["👥","Total users",ucount==null?"—":bn(ucount)],["⏳","Pending apps",bn(pend)],["🚩","Reports",bn(reports.length)],["⭐","Avg. rating",rc?bn((rsum/rc).toFixed(1)):"—"]];
+  const seed=(!adminApps.length&&APPS.length)?`<div class="card2" style="margin-top:10px"><b style="color:var(--text)">🚀 Getting started</b><br>No apps in the cloud yet. Import the ${bn(APPS.length)} sample apps from apps.js in one click, then manage everything from this dashboard.<div style="margin-top:10px"><button class="btn" style="width:100%" onclick="importSeed()">⬆️ Import sample apps</button></div></div>`:"";
   return `<div class="kpis">${kp.map(k=>`<div class="kpi"><span>${k[0]} ${k[1]}</span><b>${k[2]}</b></div>`).join("")}</div>${seed}
-  ${top5.length?`<div class="bars"><b>🏆 সবচেয়ে বেশি ডাউনলোড</b>${top5.map(a=>`<div class="bl"><span>${esc(a.name)}</span><i style="width:${Math.max(3,Math.round(dl(a)/mx*100))}%"></i><small>${bn(dl(a))}</small></div>`).join("")}</div>`:""}`;
+  ${top5.length?`<div class="bars"><b>🏆 Most downloaded</b>${top5.map(a=>`<div class="bl"><span>${esc(a.name)}</span><i style="width:${Math.max(3,Math.round(dl(a)/mx*100))}%"></i><small>${bn(dl(a))}</small></div>`).join("")}</div>`:""}`;
 }
 function viewDash(){
   if(!CLOUD) return viewLocalAdmin();
-  if(!user) return topbar()+head("📊 ড্যাশবোর্ড")+loginCard("ড্যাশবোর্ডে ঢুকতে লগইন কর");
+  if(!user) return topbar()+head("📊 Dashboard")+loginCard("Log in to open the dashboard");
   const adm=isAdmin();
   const pend=adminApps.filter(a=>a.status!=="published");
-  const tabs=adm?[["ov","📊 ওভারভিউ"],["apps","📦 অ্যাপ ("+bn(adminApps.length)+")"],["pend","⏳ পেন্ডিং ("+bn(pend.length)+")"],["rep","🚩 রিপোর্ট ("+bn(reports.length)+")"],["new","➕ নতুন"]]:[["mine","📦 আমার অ্যাপ"],["new","➕ নতুন অ্যাপ"]];
+  const tabs=adm?[["ov","📊 Overview"],["apps","📦 Apps ("+bn(adminApps.length)+")"],["pend","⏳ Pending ("+bn(pend.length)+")"],["rep","🚩 Reports ("+bn(reports.length)+")"],["new","➕ New"]]:[["mine","📦 My apps"],["new","➕ New app"]];
   if(!tabs.some(t=>t[0]===dtab)) dtab=tabs[0][0];
   let body="";
-  if(dtab==="new") body=(adm?"":`<div class="card2" style="margin-top:8px">তোর অ্যাপ জমা দিলে অ্যাডমিন দেখে পাবলিশ করবে। লিংক অবশ্যই <b>https://</b> দিয়ে শুরু হতে হবে।</div>`)+formHTML();
+  if(dtab==="new") body=(adm?"":`<div class="card2" style="margin-top:8px">After you submit your app, the admin reviews and publishes it. The link must start with <b>https://</b> . </div>`)+formHTML();
   else if(dtab==="ov") body=ovHTML();
-  else if(dtab==="apps") body=adminApps.length?adminApps.map(drow).join(""):`<div class="empty"><big>📭</big>কোনো অ্যাপ নেই। "ওভারভিউ" ট্যাবে নমুনা ইমপোর্ট কর বা নতুন অ্যাপ যোগ কর</div>`;
-  else if(dtab==="pend") body=pend.length?pend.map(drow).join(""):`<div class="empty"><big>✅</big>কোনো পেন্ডিং অ্যাপ নেই</div>`;
-  else if(dtab==="rep") body=reports.length?reports.map(r=>{ const a=byId(r.appId); return `<div class="drow"><div class="meta"><b>🚩 ${esc(a?a.name:r.appId)}</b><small>${esc(r.reason)}</small><div class="acts">${a?`<button onclick="openApp('${a.id}')">👀 দেখো</button><button onclick="setStatus('${a.id}','pending')">🙈 অ্যাপ লুকাও</button>`:""}<button class="ok" onclick="dropReport('${esc(r._id)}')">✔ ঠিক আছে</button></div></div></div>`; }).join(""):`<div class="empty"><big>🎉</big>কোনো রিপোর্ট নেই</div>`;
-  else body=myApps.length?myApps.map(drow).join(""):`<div class="empty"><big>🚀</big>তুই এখনো কোনো অ্যাপ জমা দিসনি। "নতুন অ্যাপ" ট্যাবে গিয়ে প্রথমটা দে!</div>`;
-  return topbar()+`<div class="top2"><button class="iconbtn" onclick="go('settings')">←</button><h2>${adm?"👑 অ্যাডমিন ড্যাশবোর্ড":"📊 ডেভেলপার ড্যাশবোর্ড"}</h2></div><div class="chips">${tabs.map(([k,l])=>`<button class="chip ${dtab===k?"on":""}" onclick="setD('${k}')">${l}</button>`).join("")}</div>`+body;
+  else if(dtab==="apps") body=adminApps.length?adminApps.map(drow).join(""):`<div class="empty"><big>📭</big>No apps yet. In the "Overview" tab, import the sample apps or add a new app</div>`;
+  else if(dtab==="pend") body=pend.length?pend.map(drow).join(""):`<div class="empty"><big>✅</big>No pending apps</div>`;
+  else if(dtab==="rep") body=reports.length?reports.map(r=>{ const a=byId(r.appId); return `<div class="drow"><div class="meta"><b>🚩 ${esc(a?a.name:r.appId)}</b><small>${esc(r.reason)}</small><div class="acts">${a?`<button onclick="openApp('${a.id}')">👀 View</button><button onclick="setStatus('${a.id}','pending')">🙈 Hide app</button>`:""}<button class="ok" onclick="dropReport('${esc(r._id)}')">✔ Dismiss</button></div></div></div>`; }).join(""):`<div class="empty"><big>🎉</big>No reports</div>`;
+  else body=myApps.length?myApps.map(drow).join(""):`<div class="empty"><big>🚀</big>You have not submitted any app yet. Go to the "New app" tab and submit your first one!</div>`;
+  return topbar()+`<div class="top2"><button class="iconbtn" onclick="go('settings')">←</button><h2>${adm?"👑 Admin dashboard":"📊 Developer dashboard"}</h2></div><div class="chips">${tabs.map(([k,l])=>`<button class="chip ${dtab===k?"on":""}" onclick="setD('${k}')">${l}</button>`).join("")}</div>`+body;
 }
 
-/* ---- অ্যাপ ফর্ম ---- */
+/* ---- App form ---- */
 function formHTML(){
   const e=editing||{}, adm=isAdmin()||!CLOUD;
   const v=(k,d="")=>esc(e[k]!=null?e[k]:d);
   const pi=Math.max(0,PALETTE.findIndex(p=>e.color&&p[0]===e.color[0]));
   const sel=(a,b)=>a===b?"selected":"";
   return `<div class="form">
-    <div class="lbl">অ্যাপের নাম *</div><input id="f_name" maxlength="80" value="${v("name")}">
-    <div class="lbl">ছোট বর্ণনা</div><input id="f_desc" maxlength="120" value="${v("desc")}">
-    <div class="lbl">বিস্তারিত বর্ণনা</div><textarea id="f_long" rows="4" maxlength="1500">${v("long")}</textarea>
-    <div class="lbl">Emoji আইকন</div><input id="f_emoji" maxlength="4" value="${v("emoji","📱")}">
-    <div class="lbl">আইকনের ছবির লিংক (ঐচ্ছিক, https://...)</div><input id="f_icon" value="${v("icon")}">
-    <div class="lbl">রঙ</div><select id="f_color">${PAL_NAMES.map((n,i)=>`<option value="${i}" ${i===pi?"selected":""}>${n}</option>`).join("")}</select>
-    <div class="lbl">ক্যাটাগরি</div><input id="f_cat" list="catl" maxlength="30" value="${v("cat")}"><datalist id="catl">${cats().slice(1).map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
-    <div class="lbl">ধরন</div><select id="f_type"><option value="web" ${sel(e.type,"web")}>ওয়েব অ্যাপ (PWA)</option><option value="apk" ${sel(e.type,"apk")}>APK ডাউনলোড</option></select>
-    <div class="lbl">অ্যাপের লিংক (https://...)</div><input id="f_link" value="${v("link")}">
-    <div class="lbl">ভার্সন</div><input id="f_ver" value="${v("version","1.0.0")}">
-    <div class="lbl">সাইজ</div><input id="f_size" value="${v("size","3 MB")}">
-    <div class="lbl">নতুন কী আছে</div><textarea id="f_new" rows="2" maxlength="300">${v("whatsnew")}</textarea>
-    <div class="lbl">অনুমতি (কমা দিয়ে আলাদা কর)</div><input id="f_perms" value="${esc((e.perms||[]).join(", "))}">
-    <div class="lbl">স্ক্রিনশটের লিংক (প্রতি লাইনে একটা)</div><textarea id="f_shots" rows="3">${esc((e.screenshots||[]).join("\n"))}</textarea>
-    <div class="lbl">YouTube ভিডিও id (ঐচ্ছিক)</div><input id="f_video" value="${v("video")}">
-    ${adm?`<div class="lbl">দাম (০ = ফ্রি)</div><input id="f_price" type="number" min="0" value="${v("price",0)}">
-    <div class="lbl">ব্যাজ</div><select id="f_badge"><option value="">নেই</option><option value="editor" ${sel(e.badge,"editor")}>🏆 এডিটর'স চয়েস</option><option value="hot" ${sel(e.badge,"hot")}>🔥 হট</option><option value="new" ${sel(e.badge,"new")}>🆕 নতুন</option><option value="verified" ${sel(e.badge,"verified")}>✔ ভেরিফাইড</option></select>
-    <label class="chk"><input type="checkbox" id="f_feat" ${e.featured?"checked":""}> হোমের স্লাইডারে ফিচার্ড কর</label>`:""}
-    ${CLOUD?`<button class="btn" id="savebtn" onclick="saveForm()">💾 ${adm?"সেভ কর":"রিভিউয়ের জন্য পাঠা"}</button>`:`<button class="btn" onclick="genCode()">কোড বানাও</button><button class="btn alt" onclick="testLocal()">শুধু আমার ফোনে টেস্ট</button>`}
-    ${editing&&CLOUD?`<button class="btn alt" onclick="editing=null;setD('${isAdmin()?"apps":"mine"}')">বাতিল</button>`:""}
+    <div class="lbl">App name *</div><input id="f_name" maxlength="80" value="${v("name")}">
+    <div class="lbl">Short description</div><input id="f_desc" maxlength="120" value="${v("desc")}">
+    <div class="lbl">Full description</div><textarea id="f_long" rows="4" maxlength="1500">${v("long")}</textarea>
+    <div class="lbl">Banner image link (optional, https://...)</div><input id="f_banner" value="${v("banner")}">
+    <div class="lbl">Icon image link (optional, https://...)</div><input id="f_icon" value="${v("icon")}">
+    <div class="lbl">Color</div><select id="f_color">${PAL_NAMES.map((n,i)=>`<option value="${i}" ${i===pi?"selected":""}>${n}</option>`).join("")}</select>
+    <div class="lbl">Category</div><input id="f_cat" list="catl" maxlength="30" value="${v("cat")}"><datalist id="catl">${cats().slice(1).map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+    <div class="lbl">Type</div><select id="f_type"><option value="web" ${sel(e.type,"web")}>Web app (PWA)</option><option value="apk" ${sel(e.type,"apk")}>APK download</option></select>
+    <div class="lbl">App link (https://...)</div><input id="f_link" value="${v("link")}">
+    <div class="lbl">Version</div><input id="f_ver" value="${v("version","1.0.0")}">
+    <div class="lbl">Size</div><input id="f_size" value="${v("size","3 MB")}">
+    <div class="lbl">What's new</div><textarea id="f_new" rows="2" maxlength="300">${v("whatsnew")}</textarea>
+    <div class="lbl">Permissions (separate with commas)</div><input id="f_perms" value="${esc((e.perms||[]).join(", "))}">
+    <div class="lbl">Screenshot links (one per line)</div><textarea id="f_shots" rows="3">${esc((e.screenshots||[]).join("\n"))}</textarea>
+    <div class="lbl">YouTube video id (optional)</div><input id="f_video" value="${v("video")}">
+    ${adm?`<div class="lbl">Price (0 = free)</div><input id="f_price" type="number" min="0" value="${v("price",0)}">
+    <div class="lbl">Badge</div><select id="f_badge"><option value="">None</option><option value="editor" ${sel(e.badge,"editor")}>🏆 Editor's Choice</option><option value="hot" ${sel(e.badge,"hot")}>🔥 Hot</option><option value="new" ${sel(e.badge,"new")}>🆕 New</option><option value="verified" ${sel(e.badge,"verified")}>✔ Verified</option></select>
+    <label class="chk"><input type="checkbox" id="f_feat" ${e.featured?"checked":""}> Feature on the home slider</label>`:""}
+    ${CLOUD?`<button class="btn" id="savebtn" onclick="saveForm()">💾 ${adm?"Save":"Submit for review"}</button>`:`<button class="btn" onclick="genCode()">Generate code</button><button class="btn alt" onclick="testLocal()">Test on my phone only</button>`}
+    ${editing&&CLOUD?`<button class="btn alt" onclick="editing=null;setD('${isAdmin()?"apps":"mine"}')">Cancel</button>`:""}
   </div><div id="codeOut"></div>`;
 }
 function readForm(){
   const g=i=>{ const el=$("#f_"+i); return el?String(el.value||""):""; };
-  const name=g("name").trim(); if(!name){ toast("অ্যাপের নাম দে"); return null; }
+  const name=g("name").trim(); if(!name){ toast("Enter the app name"); return null; }
   const link=g("link").trim();
-  if(link&&link!=="#"&&!/^https?:\/\//i.test(link)){ toast("লিংক https:// দিয়ে শুরু হতে হবে"); return null; }
-  const u=user||{uid:"local",email:"",name:"তুই"};
+  if(link&&link!=="#"&&!/^https?:\/\//i.test(link)){ toast("The link must start with https://"); return null; }
+  const u=user||{uid:"local",email:"",name:"You"};
   const adm=isAdmin()||!CLOUD, old=editing||{};
   let id=old.id;
   if(!id){
@@ -496,10 +528,10 @@ function readForm(){
   const list=(s,sep)=>s.split(sep).map(x=>x.trim()).filter(Boolean);
   const el=$("#f_feat");
   return {
-    id, name, dev: old.dev||u.name||"ডেভেলপার", emoji:g("emoji").trim()||"📱", icon:/^https?:\/\//i.test(g("icon").trim())?g("icon").trim():"",
-    color: PALETTE[Number(g("color"))||0], cat:g("cat").trim()||"অন্যান্য", type:g("type")==="apk"?"apk":"web", link:link||"#",
+    id, name, dev: old.dev||u.name||"Developer", icon:isImgRef(g("icon").trim())?g("icon").trim():"", banner:isImgRef(g("banner").trim())?g("banner").trim():"",
+    color: PALETTE[Number(g("color"))||0], cat:g("cat").trim()||"Other", type:g("type")==="apk"?"apk":"web", link:link||"#",
     version:g("ver").trim()||"1.0.0", size:g("size").trim()||"3 MB", desc:g("desc").trim(), long:g("long").trim()||g("desc").trim(),
-    whatsnew:g("new").trim(), perms:list(g("perms"),","), screenshots:list(g("shots"),"\n").filter(s=>/^https?:\/\//i.test(s)),
+    whatsnew:g("new").trim(), perms:list(g("perms"),","), screenshots:list(g("shots"),"\n").filter(isImgRef),
     video:/^[\w-]{6,15}$/.test(g("video").trim())?g("video").trim():"", updated:new Date().toISOString().slice(0,10),
     rating: adm?(+old.rating||0):0, downloads: adm?(+old.downloads||0):0,
     price: adm?Math.max(0,Number(g("price"))||0):0, badge: adm?g("badge"):"", featured: adm?!!(el&&el.checked):false,
@@ -508,33 +540,33 @@ function readForm(){
 }
 async function saveForm(){
   const a=readForm(); if(!a) return;
-  if(!window.cloud||!user){ toast("আগে লগইন কর"); return; }
+  if(!window.cloud||!user){ toast("Please log in first"); return; }
   const btn=$("#savebtn"); if(btn) btn.disabled=true;
   try{
     await window.cloud.saveApp(a);
-    toast(isAdmin()?"✅ সেভ হয়েছে":"✅ জমা হয়েছে! অ্যাডমিন দেখে পাবলিশ করবে");
+    toast(isAdmin()?"✅ Saved":"✅ Submitted! The admin will review and publish it");
     editing=null; dtab=isAdmin()?"apps":"mine"; await refreshDash(); loadPublic();
-  }catch(e){ console.warn(e); toast("❌ সেভ হয়নি। লগইন বা ফায়ারবেস রুলস চেক কর"); if(btn) btn.disabled=false; }
+  }catch(e){ console.warn(e); toast("❌ Could not save. Check your login and Firebase rules"); if(btn) btn.disabled=false; }
 }
-/* ---- লোকাল (ফায়ারবেস ছাড়া) অ্যাডমিন ---- */
-function adminOpen(){ const p=prompt("অ্যাডমিন পিন দে:"); if(p===null) return; if(p===STORE.adminPin){ tab="dash"; editing=null; render(); } else toast("❌ ভুল পিন"); }
+/* ---- Local (no Firebase) admin ---- */
+function adminOpen(){ const p=prompt("Enter admin PIN:"); if(p===null) return; if(p===STORE.adminPin){ tab="dash"; editing=null; render(); } else toast("❌ Wrong PIN"); }
 function viewLocalAdmin(){
-  return topbar()+`<div class="top2"><button class="iconbtn" onclick="go('settings')">←</button><h2>🛠️ লোকাল অ্যাডমিন</h2></div>
-  <div class="txt" style="margin-top:8px">ফর্ম পূরণ করে <b>"কোড বানাও"</b> চাপ, কোডটা <b>apps.js</b>-এর APPS লিস্টে পেস্ট কর। সব ইউজারের জন্য আসল ড্যাশবোর্ড চাইলে ফায়ারবেস চালু কর।</div>`+formHTML()+
-  (extra.length?head("এই ফোনে যোগ করা অ্যাপ")+extra.map(a=>`<div class="row"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><div class="meta"><b>${esc(a.name)}</b></div><button class="pill" onclick="delExtra('${a.id}')">মুছো</button></div>`).join(""):"");
+  return topbar()+`<div class="top2"><button class="iconbtn" onclick="go('settings')">←</button><h2>🛠️ Local admin</h2></div>
+  <div class="txt" style="margin-top:8px">Fill in the form and tap <b>"Generate code"</b> then paste the code into <b>apps.js</b>(APPS list). For a real dashboard for all users, turn on Firebase.</div>`+formHTML()+
+  (extra.length?head("Apps added on this phone")+extra.map(a=>`<div class="row"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><div class="meta"><b>${esc(a.name)}</b></div><button class="pill" onclick="delExtra('${a.id}')">Delete</button></div>`).join(""):"");
 }
-function genCode(){ const a=readForm(); if(!a) return; $("#codeOut").innerHTML=`<pre id="codeTxt">${esc(JSON.stringify(a,null,2))},</pre><div class="form"><button class="btn" onclick="navigator.clipboard.writeText($('#codeTxt').textContent).then(()=>toast('✅ কপি হয়েছে'))">📋 কপি কর</button></div>`; }
-function testLocal(){ const a=readForm(); if(!a) return; extra.push(a); ls.set("extraApps",extra); toast("✅ যোগ হয়েছে"); render(); }
+function genCode(){ const a=readForm(); if(!a) return; $("#codeOut").innerHTML=`<pre id="codeTxt">${esc(JSON.stringify(a,null,2))},</pre><div class="form"><button class="btn" onclick="navigator.clipboard.writeText($('#codeTxt').textContent).then(()=>toast('✅ Copied'))">📋 Copy</button></div>`; }
+function testLocal(){ const a=readForm(); if(!a) return; extra.push(a); ls.set("extraApps",extra); toast("✅ Added"); render(); }
 function delExtra(id){ extra=extra.filter(a=>a.id!==id); ls.set("extraApps",extra); render(); }
 
 /* ================= navigation ================= */
-const TABS=[["home","🏠","হোম"],["explore","🧭","এক্সপ্লোর"],["search","🔍","সার্চ"],["library","📚","লাইব্রেরি"],["settings","👤","প্রোফাইল"]];
+const TABS=[["home",SVG.home,"Home"],["explore",SVG.explore,"Explore"],["search",SVG.search,"Search"],["library",SVG.library,"Library"],["settings",SVG.profile,"Profile"]];
 function go(t){ tab=t; closeApp(); render(); window.scrollTo(0,0); }
 function render(){
   const v={home:viewHome,explore:viewExplore,search:viewSearch,library:viewLibrary,settings:viewSettings,dash:viewDash}[tab]();
   $("#app").innerHTML=v;
   const u=updates().length, adminDot=isAdmin()&&(adminApps.some(a=>a.status!=="published")||reports.length);
-  $("#nav").innerHTML=TABS.map(([k,i,l])=>`<button class="${(tab===k||(tab==="dash"&&k==="settings"))?"on":""}" onclick="go('${k}')"><i>${i}</i>${l}${(k==="library"&&u)||(k==="settings"&&adminDot)?'<span class="dot"></span>':""}</button>`).join("");
+  $("#nav").innerHTML=TABS.map(([k,i,l])=>`<button class="${(tab===k||(tab==="dash"&&k==="settings"))?"on":""}" onclick="go('${k}')"><i>${svgI(i)}</i>${l}${(k==="library"&&u)||(k==="settings"&&adminDot)?'<span class="dot"></span>':""}</button>`).join("");
   if(tab==="search") doSearch();
   if(tab==="home") initHero();
 }
@@ -550,25 +582,25 @@ function initHero(){
 let cur=null, detailOpen=false;
 function reviewsHTML(id){
   const rs=reviewsOf(id), adm=isAdmin();
-  return head("রিভিউ ("+bn(rs.length)+")") + (rs.length
+  return head("Reviews ("+bn(rs.length)+")") + (rs.length
     ? rs.slice().reverse().map(r=>`<div class="rev">${CLOUD&&adm&&/^[\w-]+$/.test(r.uid||"")?`<button class="del" onclick="delReview('${id}','${r.uid}')">🗑️</button>`:""}${CLOUD&&safeImg(r.photo)?`<img class="revav" src="${esc(safeImg(r.photo))}" referrerpolicy="no-referrer" alt="">`:""}<b>${esc(r.name)}</b><span class="s">${"★".repeat(Math.max(0,Math.min(5,r.stars|0)))}</span>${r.text?`<p>${esc(r.text)}</p>`:""}</div>`).join("")
-    : `<div class="empty">${CLOUD&&crevLoaded[id]!==true?"⏳ লোড হচ্ছে...":"এখনো কোনো রিভিউ নেই। প্রথম রিভিউটা তুই দে!"}</div>`);
+    : `<div class="empty">${CLOUD&&crevLoaded[id]!==true?"⏳ Loading...":"No reviews yet. Be the first!"}</div>`);
 }
 function mineHTML(id){
   if(CLOUD){
-    if(!user) return `<div class="card2">রেটিং বা রিভিউ দিতে লগইন করতে হবে।</div><div style="padding:10px 16px 0"><button class="btn" style="width:100%" onclick="login()">Google দিয়ে লগইন কর</button></div>`;
+    if(!user) return `<div class="card2">Log in to rate or review.</div><div style="padding:10px 16px 0"><button class="btn" style="width:100%" onclick="login()">Log in with Google</button></div>`;
     const m=mine[id], s=m?m.stars:0, t=drafts[id]!=null?drafts[id]:(m?m.text:"");
     return `<div class="stars">${[1,2,3,4,5].map(n=>`<button class="${n<=s?"on":""}" onclick="rate(${n})">★</button>`).join("")}</div>
-    <div class="form"><textarea id="rt" rows="3" maxlength="300" placeholder="অ্যাপ কেমন লাগল? (ঐচ্ছিক)">${esc(t)}</textarea><button class="btn" onclick="addReview()">${m?"আপডেট কর":"পাঠা"}</button></div>`;
+    <div class="form"><textarea id="rt" rows="3" maxlength="300" placeholder="How did you like the app? (optional)">${esc(t)}</textarea><button class="btn" onclick="addReview()">${m?"Update":"Submit"}</button></div>`;
   }
   const s=myRate[id]||0;
   return `<div class="stars">${[1,2,3,4,5].map(n=>`<button class="${n<=s?"on":""}" onclick="rate(${n})">★</button>`).join("")}</div>
-  <div class="form"><input id="rn" placeholder="তোর নাম"><textarea id="rt" rows="2" placeholder="অ্যাপ কেমন লাগল?"></textarea><button class="btn" onclick="addReview()">পাঠা</button></div>`;
+  <div class="form"><input id="rn" placeholder="Your name"><textarea id="rt" rows="2" placeholder="How did you like the app?"></textarea><button class="btn" onclick="addReview()">Submit</button></div>`;
 }
 function paintReviews(id){
   if(!cur||cur.id!==id) return;
   const b=$("#revbox"); if(b) b.innerHTML=reviewsHTML(id);
-  const c=$("#revcnt"); if(c) c.textContent=bn(reviewsOf(id).length)+"টি রিভিউ";
+  const c=$("#revcnt"); if(c) c.textContent=bn(reviewsOf(id).length)+" reviews";
   const a=$("#avgb"); if(a) a.textContent="⭐ "+rt(cur);
 }
 function paintMine(id){
@@ -582,29 +614,29 @@ function openApp(id){
   if(!detailOpen){ try{ history.pushState({d:1},""); }catch(e){} detailOpen=true; }
   const rs=reviewsOf(id);
   const isIn=installed.includes(id), isW=wish.includes(id), upd=hasUpdate(a), paid=a.price>0;
-  const shotArr=(a.screenshots||[]).filter(s=>safeImg(s));
-  const shots=shotArr.length?shotArr.map((s,i)=>`<div class="shot" onclick="viewShots(${i})"><img src="${esc(safeImg(s))}" alt=""></div>`).join("")
-    :[0,1,2,3].map(i=>`<div class="shot" style="background:${grad(a)};opacity:${1-i*.12}" onclick="viewShots(${i})">${esc(a.emoji||"📱")}</div>`).join("");
+  const shotArr=shotsOf(a);
+  const shots=shotArr.map((s,i)=>`<div class="shot" onclick="viewShots(${i})"><img src="${esc(s)}" alt=""></div>`).join("");
   const similar=all().filter(x=>x.id!==id&&x.cat===a.cat);
-  const btnTxt = paid&&!isIn ? `💬 ${priceTxt(a)} • কিনতে যোগাযোগ কর` : upd ? "🔄 আপডেট কর" : isIn ? (a.type==="apk"?"আবার ডাউনলোড":"▶️ খোল") : (a.type==="apk"?"⬇️ ডাউনলোড":"📲 ইনস্টল");
-  const waLink = STORE.whatsapp ? `https://wa.me/${encodeURIComponent(STORE.whatsapp)}?text=${encodeURIComponent("হ্যালো, আমি "+a.name+" অ্যাপ সম্পর্কে জানতে চাই")}` : "";
+  const btnTxt = paid&&!isIn ? `💬 ${priceTxt(a)} • Contact to buy` : upd ? "🔄 Update" : isIn ? (a.type==="apk"?"Download again":"▶️ Open") : (a.type==="apk"?"⬇️ Download":"📲 Install");
+  const waLink = STORE.whatsapp ? `https://wa.me/${encodeURIComponent(STORE.whatsapp)}?text=${encodeURIComponent("Hello, I would like to know about "+a.name+" app")}` : "";
   const unpub = a.status && a.status!=="published";
   $("#detail").innerHTML=`<div class="dwrap">
-    <div class="dbar"><button class="iconbtn" onclick="closeApp()">←</button><button class="iconbtn" onclick="shareApp()">📤</button></div>
-    <div class="dhead"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><div><h1>${esc(a.name)}</h1><div class="dev">${esc(a.dev)}</div><div class="cat">${esc(a.cat)} • ${a.type==="apk"?"APK":"ওয়েব অ্যাপ"} ${badge(a)}${unpub?` <span class="st wait">⏳ পেন্ডিং (প্রিভিউ)</span>`:""}</div></div></div>
-    <div class="stats"><div><b id="avgb">⭐ ${rt(a)}</b><span id="revcnt">${bn(rs.length)}টি রিভিউ</span></div><div><b>${fmt(dl(a))}</b><span>ডাউনলোড</span></div><div><b>${esc(a.size)}</b><span>সাইজ</span></div><div><b>${esc(a.version)}</b><span>ভার্সন</span></div></div>
+    <div class="dbar"><button class="iconbtn" onclick="closeApp()">←</button><button class="iconbtn" onclick="shareApp()">${svgI(SVG.share)}</button></div>
+    ${bannerSrc(a)&&cssUrl(bannerSrc(a))?`<div class="dbanner" style="background-image:url('${cssUrl(bannerSrc(a))}')"></div>`:""}
+    <div class="dhead"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><div><h1>${esc(a.name)}</h1><div class="dev">${esc(a.dev)}</div><div class="cat">${esc(a.cat)} • ${a.type==="apk"?"APK":"Web app"} ${badge(a)}${unpub?` <span class="st wait">⏳ Pending (preview)</span>`:""}</div></div></div>
+    <div class="stats"><div><b id="avgb">⭐ ${rt(a)}</b><span id="revcnt">${bn(rs.length)} reviews</span></div><div><b>${fmt(dl(a))}</b><span>Downloads</span></div><div><b>${esc(a.size)}</b><span>Size</span></div><div><b>${esc(a.version)}</b><span>Version</span></div></div>
     <div class="actions"><button class="install" id="ibtn" onclick="installApp()"><div class="bar" id="ibar"></div><span id="itxt">${btnTxt}</span></button><button class="sq" onclick="toggleWish()">${isW?"❤️":"🤍"}</button></div>
-    ${isIn?`<div class="actions" style="margin-top:10px"><button class="btn alt" style="flex:1" onclick="uninstall()">🗑️ লাইব্রেরি থেকে সরাও</button></div>`:""}
-    ${waLink?`<div style="padding:10px 16px 0"><a class="btn wa" href="${waLink}" target="_blank" rel="noopener">💬 WhatsApp-এ যোগাযোগ কর</a></div>`:""}
-    ${head("স্ক্রিনশট")}<div class="shots">${shots}</div>
-    ${a.video&&/^[\w-]{6,15}$/.test(a.video)?head("🎬 ট্রেলার")+`<div class="video" style="background-image:url(https://img.youtube.com/vi/${esc(a.video)}/hqdefault.jpg)" onclick="playVid(this,'${esc(a.video)}')">▶️</div>`:""}
-    ${head("এই অ্যাপ সম্পর্কে")}<div class="txt">${esc(a.long||a.desc)}<br><br>🕒 শেষ আপডেট: ${esc(a.updated||"-")}</div>
-    ${a.whatsnew?head("🆕 নতুন কী আছে")+`<div class="card2">${esc(a.whatsnew)}</div>`:""}
-    ${a.perms&&a.perms.length?head("🔐 অনুমতি")+`<div class="card2">${a.perms.map(p=>`<span class="perm">${esc(p)}</span>`).join("")}</div>`:""}
-    ${head("রেটিং ও রিভিউ দে")}<div id="myrev">${mineHTML(id)}</div>
+    ${isIn?`<div class="actions" style="margin-top:10px"><button class="btn alt" style="flex:1" onclick="uninstall()">🗑️ Remove from library</button></div>`:""}
+    ${waLink?`<div style="padding:10px 16px 0"><a class="btn wa" href="${waLink}" target="_blank" rel="noopener">💬 Contact on WhatsApp</a></div>`:""}
+    ${shotArr.length?head("Preview")+`<div class="shots">${shots}</div>`:""}
+    ${a.video&&/^[\w-]{6,15}$/.test(a.video)?head("🎬 Trailer")+`<div class="video" style="background-image:url(https://img.youtube.com/vi/${esc(a.video)}/hqdefault.jpg)" onclick="playVid(this,'${esc(a.video)}')">▶️</div>`:""}
+    ${head("About this app")}<div class="txt">${esc(a.long||a.desc)}<br><br>🕒 Last updated: ${esc(a.updated||"-")}</div>
+    ${a.whatsnew?head("🆕 What's new")+`<div class="card2">${esc(a.whatsnew)}</div>`:""}
+    ${a.perms&&a.perms.length?head("🔐 Permissions")+`<div class="card2">${a.perms.map(p=>`<span class="perm">${esc(p)}</span>`).join("")}</div>`:""}
+    ${head("Rate and review")}<div id="myrev">${mineHTML(id)}</div>
     <div id="revbox">${reviewsHTML(id)}</div>
-    ${CLOUD?`<div style="padding:14px 16px 0"><button class="btn alt" style="width:100%" onclick="reportApp()">🚩 এই অ্যাপ রিপোর্ট কর</button></div>`:""}
-    ${similar.length?head("এরকম আরও অ্যাপ")+`<div class="hrow">${similar.map(tile).join("")}</div>`:""}
+    ${CLOUD?`<div style="padding:14px 16px 0"><button class="btn alt" style="width:100%" onclick="reportApp()">🚩 Report this app</button></div>`:""}
+    ${similar.length?head("Similar apps")+`<div class="hrow">${similar.map(tile).join("")}</div>`:""}
   </div>`;
   $("#detail").classList.add("open");
   if(CLOUD && window.cloud){
@@ -625,12 +657,12 @@ function closeApp(fromPop){
 window.addEventListener("popstate",()=>{ if(detailOpen){ detailOpen=false; $("#detail").classList.remove("open"); } $("#viewer").style.display="none"; });
 function playVid(el,id){ el.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>`; el.removeAttribute("onclick"); }
 function viewShots(i){
-  const a=cur, v=$("#viewer"), arr=(a.screenshots||[]).filter(s=>safeImg(s));
-  v.innerHTML=(arr.length?arr.map(s=>`<div class="vs"><img src="${esc(safeImg(s))}" alt=""></div>`):[0,1,2,3].map(()=>`<div class="vs" style="background:${grad(a)}">${esc(a.emoji||"📱")}</div>`)).join("");
+  const a=cur, v=$("#viewer"), arr=shotsOf(a); if(!arr.length) return;
+  v.innerHTML=arr.map(s=>`<div class="vs"><img src="${esc(s)}" alt=""></div>`).join("");
   v.style.display="flex"; setTimeout(()=>{ const c=v.children[i]; if(c) c.scrollIntoView({inline:"center"}); },30);
 }
 
-/* ---- ডাউনলোড গোনা ---- */
+/* ---- Download counting ---- */
 function countDownload(a){
   if(counted.includes(a.id)) return;
   counted.push(a.id); ls.set("counted",counted);
@@ -642,18 +674,18 @@ function countDownload(a){
 function installApp(){
   const a=cur, btn=$("#ibtn"), bar=$("#ibar"), txt=$("#itxt"), isIn=installed.includes(a.id);
   if(btn.dataset.busy) return;
-  if(a.status&&a.status!=="published"){ toast("এই অ্যাপ এখনো পাবলিশ হয়নি"); return; }
+  if(a.status&&a.status!=="published"){ toast("This app is not published yet"); return; }
   if(a.price>0 && !isIn){
-    if(STORE.whatsapp) window.open(`https://wa.me/${encodeURIComponent(STORE.whatsapp)}?text=${encodeURIComponent(a.name+" অ্যাপটা কিনতে চাই ("+priceTxt(a)+")")}`,"_blank");
-    else toast("এই অ্যাপ পেইড। মালিকের সাথে যোগাযোগ কর");
+    if(STORE.whatsapp) window.open(`https://wa.me/${encodeURIComponent(STORE.whatsapp)}?text=${encodeURIComponent(a.name+" - I want to buy this app ("+priceTxt(a)+")")}`,"_blank");
+    else toast("This is a paid app. Contact the owner");
     return;
   }
   const link=safeUrl(a.link);
-  if(isIn && !hasUpdate(a) && a.type==="web"){ if(link!=="#") window.open(link,"_blank"); else toast("⚠️ লিংক এখনো দেওয়া হয়নি"); return; }
+  if(isIn && !hasUpdate(a) && a.type==="web"){ if(link!=="#") window.open(link,"_blank"); else toast("⚠️ No link has been added yet"); return; }
   btn.dataset.busy=1; let p=0; const wasNew=!isIn;
   const iv=setInterval(()=>{
     p+=6+Math.random()*10; if(p>100) p=100;
-    bar.style.width=p+"%"; txt.textContent=(a.type==="apk"?"ডাউনলোড হচ্ছে ":"ইনস্টল হচ্ছে ")+bn(Math.round(p))+"%";
+    bar.style.width=p+"%"; txt.textContent=(a.type==="apk"?"Downloading ":"Installing ")+bn(Math.round(p))+"%";
     if(p>=100){
       clearInterval(iv); delete btn.dataset.busy;
       if(wasNew){ installed.push(a.id); countDownload(a); }
@@ -661,23 +693,23 @@ function installApp(){
       if(link!=="#"){
         if(a.type==="apk"){ const l=document.createElement("a"); l.href=link; l.download=""; document.body.appendChild(l); l.click(); l.remove(); }
         else window.open(link,"_blank");
-      } else toast("⚠️ এই অ্যাপের লিংক এখনো দেওয়া হয়নি");
-      confetti(); if(wasNew) addXP(20); else toast("✅ আপডেট হয়েছে");
+      } else toast("⚠️ No link has been added for this app yet");
+      confetti(); if(wasNew) addXP(20); else toast("✅ Updated");
       openApp(a.id); render();
     }
   },160);
 }
-function uninstall(){ installed=installed.filter(x=>x!==cur.id); delete iver[cur.id]; persist(); toast("সরানো হয়েছে"); openApp(cur.id); render(); }
-function toggleWish(){ const add=!wish.includes(cur.id); wish=add?[...wish,cur.id]:wish.filter(x=>x!==cur.id); persist(); if(add) addXP(3); else toast("সরানো হলো"); openApp(cur.id); render(); }
+function uninstall(){ installed=installed.filter(x=>x!==cur.id); delete iver[cur.id]; persist(); toast("Removed"); openApp(cur.id); render(); }
+function toggleWish(){ const add=!wish.includes(cur.id); wish=add?[...wish,cur.id]:wish.filter(x=>x!==cur.id); persist(); if(add) addXP(3); else toast("Removed"); openApp(cur.id); render(); }
 
-/* ---- রেটিং ও রিভিউ ---- */
+/* ---- Ratings and reviews ---- */
 async function saveMyReview(stars,text){
-  if(!user){ toast("আগে লগইন কর"); return; }
-  if(!window.cloud){ toast("ইন্টারনেট নেই, পরে চেষ্টা কর"); return; }
+  if(!user){ toast("Please log in first"); return; }
+  if(!window.cloud){ toast("No internet, try again later"); return; }
   const id=cur.id;
   try{
     const ex=await window.cloud.getMyReview(id,user.uid);
-    const rev={appId:id,uid:user.uid,name:String(user.name||"ইউজার").slice(0,40),photo:String(user.photo||"").slice(0,500),stars,text:String(text!==undefined?text:(ex?ex.text:"")).slice(0,300),ts:Date.now()};
+    const rev={appId:id,uid:user.uid,name:String(user.name||"User").slice(0,40),photo:String(user.photo||"").slice(0,500),stars,text:String(text!==undefined?text:(ex?ex.text:"")).slice(0,300),ts:Date.now()};
     await window.cloud.saveReview(rev);
     const dS=stars-(ex?ex.stars:0), dC=ex?0:1;
     await window.cloud.bump(id,0,dS,dC).catch(()=>{});
@@ -685,47 +717,49 @@ async function saveMyReview(stars,text){
     s.ratingSum+=dS; s.ratingCount+=dC;
     mine[id]=rev; delete drafts[id];
     creviews[id]=(creviews[id]||[]).filter(r=>r.uid!==user.uid).concat([rev]);
-    if(!ex) addXP(15); else toast("✅ সেভ হয়েছে");
+    if(!ex) addXP(15); else toast("✅ Saved");
     paintMine(id); paintReviews(id);
-  }catch(e){ console.warn(e); toast("❌ সেভ হয়নি, আবার চেষ্টা কর"); }
+  }catch(e){ console.warn(e); toast("❌ Could not save, try again"); }
 }
 async function delReview(appId,uid){
-  if(!confirm("এই রিভিউ মুছবি?")) return;
+  if(!confirm("Delete this review?")) return;
   const r=(creviews[appId]||[]).find(x=>x.uid===uid);
   try{
     await window.cloud.delReview(appId,uid);
     if(r){ await window.cloud.bump(appId,0,-r.stars,-1).catch(()=>{}); const s=cstats[appId]; if(s){ s.ratingSum-=r.stars; s.ratingCount-=1; } }
-    creviews[appId]=(creviews[appId]||[]).filter(x=>x.uid!==uid); paintReviews(appId); toast("🗑️ মোছা হয়েছে");
-  }catch(e){ toast("❌ মোছা যায়নি"); }
+    creviews[appId]=(creviews[appId]||[]).filter(x=>x.uid!==uid); paintReviews(appId); toast("🗑️ Deleted");
+  }catch(e){ toast("❌ Could not delete"); }
 }
 function rate(n){
   if(CLOUD) return saveMyReview(n,undefined);
   const first=!myRate[cur.id]; myRate[cur.id]=n; ls.set("rates",myRate);
-  if(first) addXP(5); else toast("⭐ ধন্যবাদ!");
+  if(first) addXP(5); else toast("⭐ Thanks!");
   openApp(cur.id);
 }
 function addReview(){
   if(CLOUD){ const t=$("#rt"); return saveMyReview((mine[cur.id]&&mine[cur.id].stars)||5, t?t.value.trim():""); }
-  const name=($("#rn").value.trim()||"অজানা").slice(0,30), text=$("#rt").value.trim().slice(0,300);
-  if(!text){ toast("কিছু লেখ আগে"); return; }
+  const name=($("#rn").value.trim()||"Anonymous").slice(0,30), text=$("#rt").value.trim().slice(0,300);
+  if(!text){ toast("Write something first"); return; }
   (myRev[cur.id]=myRev[cur.id]||[]).push({name,text,stars:myRate[cur.id]||5});
   ls.set("reviews",myRev); addXP(15); openApp(cur.id);
 }
 async function reportApp(){
-  if(!user){ toast("রিপোর্ট করতে লগইন কর"); return; }
-  const reason=prompt("কী সমস্যা? (যেমন: নকল, ভাইরাস, কাজ করে না)");
+  if(!user){ toast("Log in to report"); return; }
+  const reason=prompt("What is wrong? (for example: fake, virus, does not work)");
   if(!reason||!reason.trim()) return;
-  try{ await window.cloud.addReport({appId:cur.id,uid:user.uid,reason:reason.trim().slice(0,200),ts:Date.now()}); toast("🚩 রিপোর্ট পাঠানো হয়েছে, ধন্যবাদ!"); }
-  catch(e){ toast("❌ পাঠানো যায়নি"); }
+  try{ await window.cloud.addReport({appId:cur.id,uid:user.uid,reason:reason.trim().slice(0,200),ts:Date.now()}); toast("🚩 Report sent, thank you!"); }
+  catch(e){ toast("❌ Could not send"); }
 }
 function shareApp(){
   const d={title:cur.name,text:cur.name+" - "+cur.desc,url:location.href};
   if(navigator.share) navigator.share(d).catch(()=>{});
-  else navigator.clipboard.writeText(location.href).then(()=>toast("🔗 লিংক কপি হয়েছে"));
+  else navigator.clipboard.writeText(location.href).then(()=>toast("🔗 Link copied"));
 }
 
 /* ================= start ================= */
 document.title=STORE.name; $("#spName").textContent=STORE.name;
+{ const sl=$("#spLogo"); if(sl&&IMGV("store")) sl.src=IMGV("store"); else if(sl) sl.remove();
+  const st=IMGV("store"); if(st) ["icon","apple-touch-icon"].forEach(r=>{ const l=document.createElement("link"); l.rel=r; l.href=st; document.head.appendChild(l); }); }
 render();
 setTimeout(()=>{ const s=$("#splash"); s.style.opacity=0; setTimeout(()=>s.remove(),500); },1100);
 const offl=()=>{ $("#offline").style.display=navigator.onLine?"none":"block"; };
@@ -747,7 +781,7 @@ if (STORE.firebase && STORE.firebase.projectId) {
     const clean = o => JSON.parse(JSON.stringify(o));
     window.cloud = {
       onUser(cb) {
-        A.onAuthStateChanged(auth, u => cb(u ? { uid: u.uid, name: u.displayName || "ইউজার", email: u.email || "", photo: u.photoURL || "" } : null));
+        A.onAuthStateChanged(auth, u => cb(u ? { uid: u.uid, name: u.displayName || "User", email: u.email || "", photo: u.photoURL || "" } : null));
       },
       async login() {
         const p = new A.GoogleAuthProvider();
@@ -789,7 +823,7 @@ if (STORE.firebase && STORE.firebase.projectId) {
       async countUsers() { return (await F.getCountFromServer(col("users"))).data().count; }
     };
     window.dispatchEvent(new Event("cloudready"));
-  } catch (e) { console.warn("Firebase চালু হয়নি:", e); }
+  } catch (e) { console.warn("Firebase did not start:", e); }
 }
 </script>
 </body>
