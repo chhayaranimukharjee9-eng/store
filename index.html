@@ -95,6 +95,8 @@ select.sort{margin:8px 16px;background:var(--card);color:var(--text);border:1px 
 .install{flex:1;padding:14px;border-radius:14px;background:linear-gradient(90deg,var(--accent2),var(--accent));color:#fff;font-weight:800;font-size:16px;position:relative;overflow:hidden}
 .install .bar{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.3);width:0}
 .install span{position:relative}
+.install.apk{background:linear-gradient(90deg,#15803d,#22c55e)}
+.install.off{filter:grayscale(.7);opacity:.6}
 .sq{width:50px;border-radius:14px;background:var(--card);font-size:20px}
 .shots{display:flex;gap:10px;overflow-x:auto;padding:4px 16px;scrollbar-width:none}
 .shot{flex:0 0 150px;height:270px;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:54px;color:#fff;text-align:center;cursor:zoom-in}
@@ -209,10 +211,8 @@ const IMGV = k => (typeof IMG!=="undefined" && IMG[k]) || "";
 const safeImg = u => { u=String(u||""); if(u.indexOf("img:")===0) return IMGV(u.slice(4)); return /^https?:\/\//i.test(u) ? u : ""; };
 const isImgRef = u => /^(https?:\/\/|img:)/i.test(String(u||""));
 const cssUrl = t => /^[^'"()\s\\]+$/.test(t||"") ? t : "";
-const installHelp = a => a.type==="apk"
-  ? `<div class="card2" style="margin-top:14px"><b style="color:var(--text)">🤖 Android APK</b><br>1. Tap <b>Download APK</b>.<br>2. Open the downloaded .apk file.<br>3. If Android asks, allow installs from this browser, then tap Install.</div>`
-  : `<div class="card2" style="margin-top:14px"><b style="color:var(--text)">🌐 Web app</b><br>Tap <b>Open app</b> to use it in your browser. To keep it on your home screen, open the browser menu and choose <b>Add to Home screen</b>.</div>`;
-const typeChips = () => `<div class="chips">${[["all","All types"],["web","🌐 Web apps ("+bn(all().filter(a=>a.type!=="apk").length)+")"],["apk","🤖 Android APKs ("+bn(all().filter(a=>a.type==="apk").length)+")"]].map(([k,l])=>`<button class="chip ${typeF===k?"on":""}" onclick="typeF='${k}';render()">${l}</button>`).join("")}</div>`;
+const installHelp = a => `<div class="card2" style="margin-top:14px"><b style="color:var(--text)">Two ways to use this app</b><br><b>Web app:</b> tap <b>Open web app</b>. To keep it on your home screen, open the browser menu and choose <b>Add to Home screen</b>.<br><b>Android APK:</b> tap <b>Download APK</b>, open the downloaded file, allow installs from this browser if Android asks, then tap Install.</div>`;
+const typeChips = () => `<div class="chips">${[["all","All types"],["web","🌐 Web apps ("+bn(all().filter(a=>isWebList(a)).length)+")"],["apk","🤖 Android APKs ("+bn(all().filter(a=>hasApk(a)).length)+")"]].map(([k,l])=>`<button class="chip ${typeF===k?"on":""}" onclick="typeF='${k}';render()">${l}</button>`).join("")}</div>`;
 const typeSec = (t,l,k) => l.length ? head(t,`<button onclick="typeF='${k}';go('explore')">See all</button>`)+`<div class="hrow">${l.map(tile).join("")}</div>` : "";
 const SVG = {
   search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
@@ -251,8 +251,13 @@ let tab="home", cat="All", query="", sortBy="popular", libTab="installed", dtab=
 
 const isAdmin = () => !!(user && STORE.adminEmail && user.email && user.email.toLowerCase()===String(STORE.adminEmail).trim().toLowerCase());
 const baseApps = () => (CLOUD && cloudApps && cloudApps.length) ? cloudApps : APPS;
-const all = () => CLOUD ? baseApps() : [...APPS, ...extra];
-const byId = id => all().find(a=>a.id===id) || adminApps.find(a=>a.id===id) || myApps.find(a=>a.id===id);
+const NORM = a => { if(a && a.type==="apk" && !a.apk){ a.apk=a.link; a.link="#"; } return a; };
+const hasWeb = a => safeUrl(NORM(a).link)!=="#";
+const hasApk = a => safeUrl(NORM(a).apk)!=="#";
+const isWebList = a => hasWeb(a)||!hasApk(a);
+const kindTxt = a => hasWeb(a)&&hasApk(a) ? "Web + APK" : hasApk(a) ? "APK" : "Web app";
+const all = () => (CLOUD ? baseApps() : [...APPS, ...extra]).map(NORM);
+const byId = id => NORM(all().find(a=>a.id===id) || adminApps.find(a=>a.id===id) || myApps.find(a=>a.id===id));
 const cats = () => ["All", ...new Set(all().map(a=>a.cat))];
 const catIcon = c => { const n=String(c||""); return svgI(/fit|gym|health|sport/i.test(n)?SVG.dumbbell:/tool|util|product/i.test(n)?SVG.tools:/game/i.test(n)?SVG.game:/edu|learn|book|school/i.test(n)?SVG.book:SVG.grid); };
 const iconSrc = a => safeImg(a.icon) || IMGV(a.id+"-icon");
@@ -337,7 +342,7 @@ async function logout(){ if(!confirm("Log out?")) return; try{ await window.clou
 
 /* ================= UI pieces ================= */
 const tile = a => `<button class="tile" onclick="openApp('${a.id}')"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><b>${esc(a.name)}</b><span>⭐ ${rt(a)} • ${esc(a.size)}</span></button>`;
-const rowApp = (a,i) => `<div class="row" onclick="openApp('${a.id}')">${i!=null?`<div class="rank">${bn(i+1)}</div>`:""}<div class="ico" style="background:${grad(a)}">${icon(a)}</div><div class="meta"><b>${esc(a.name)}${badge(a)}</b><p>${esc(a.desc)}</p><small>${a.type==="apk"?"🤖 APK":"🌐 Web"} • ⭐ ${rt(a)} • ${fmt(dl(a))} • ${esc(a.size)} • ${priceTxt(a)}</small></div><span class="pill ${hasUpdate(a)?"upd":installed.includes(a.id)?"done":""}">${hasUpdate(a)?"Update":installed.includes(a.id)?"✔":"Get"}</span></div>`;
+const rowApp = (a,i) => `<div class="row" onclick="openApp('${a.id}')">${i!=null?`<div class="rank">${bn(i+1)}</div>`:""}<div class="ico" style="background:${grad(a)}">${icon(a)}</div><div class="meta"><b>${esc(a.name)}${badge(a)}</b><p>${esc(a.desc)}</p><small>${kindTxt(a)} • ⭐ ${rt(a)} • ${fmt(dl(a))} • ${esc(a.size)} • ${priceTxt(a)}</small></div><span class="pill ${hasUpdate(a)?"upd":installed.includes(a.id)?"done":""}">${hasUpdate(a)?"Update":installed.includes(a.id)?"✔":"Get"}</span></div>`;
 const head = (t,btn) => `<div class="sec-h"><h2>${t}</h2>${btn||""}</div>`;
 const avatarInner = () => user&&safeImg(user.photo) ? `<img src="${esc(safeImg(user.photo))}" referrerpolicy="no-referrer" alt="">` : esc((user&&user.name||"?").charAt(0).toUpperCase());
 function topbar(){
@@ -360,14 +365,14 @@ function viewHome(){
   ${CLOUD&&!user?`<div class="guest"><span style="font-size:26px">🎁</span><div style="flex:1">Log in to save your XP and library on all devices and to write reviews.</div><button onclick="login()">Log in</button></div>`:""}
   <div class="aod" style="background:${grad(aod)}" onclick="openApp('${aod.id}')"><div class="ico">${icon(aod)}</div><div><small>🌟 App of the Day</small><h3>${esc(aod.name)}</h3><p>${esc(aod.desc)}</p><span class="go">View now</span></div></div>
   ${head("🔥 Trending")}<div class="hrow">${trending.map(tile).join("")}</div>
-  ${typeSec("🌐 Web apps",trending.filter(a=>a.type!=="apk"),"web")}${typeSec("🤖 Android APKs",trending.filter(a=>a.type==="apk"),"apk")}
+  ${typeSec("🌐 Web apps",trending.filter(a=>isWebList(a)),"web")}${typeSec("🤖 Android APKs",trending.filter(hasApk),"apk")}
   ${cols.map(c=>head(esc(c.t))+`<div class="hrow">${c.apps.map(tile).join("")}</div>`).join("")}
   ${head("🏆 Top Charts",`<button onclick="go('explore')">See all</button>`)}${trending.slice(0,5).map((a,i)=>rowApp(a,i)).join("")}
   ${head("🆕 New and Updated")}<div class="hrow">${fresh.map(tile).join("")}</div>`;
 }
 function setCat(i){ cat=cats()[i]; render(); }
 function viewExplore(){
-  let list=all().filter(a=>(cat==="All"||a.cat===cat)&&(typeF==="all"||(typeF==="apk")===(a.type==="apk")));
+  let list=all().filter(a=>(cat==="All"||a.cat===cat)&&(typeF==="all"||(typeF==="apk"?hasApk(a):isWebList(a))));
   const s={popular:(a,b)=>dl(b)-dl(a),rating:(a,b)=>avg(b)-avg(a),new:(a,b)=>(b.updated||"").localeCompare(a.updated||""),name:(a,b)=>a.name.localeCompare(b.name)}[sortBy];
   list.sort(s);
   const cs=cats();
@@ -440,7 +445,7 @@ async function refreshDash(){
 }
 function setD(k){ dtab=k; if(k==="newweb"||k==="newapk") editing=null; render(); }
 function findDash(id){ return adminApps.find(a=>a.id===id)||myApps.find(a=>a.id===id); }
-function editApp(id){ const a=findDash(id); if(!a) return; editing=a; dtab=a.type==="apk"?"newapk":"newweb"; render(); window.scrollTo(0,0); }
+function editApp(id){ const a=findDash(id); if(!a) return; editing=NORM({...a}); dtab=a.type==="apk"?"newapk":"newweb"; render(); window.scrollTo(0,0); }
 async function delApp(id){
   if(!confirm("Delete this app? This cannot be undone")) return;
   try{ await window.cloud.delApp(id); toast("🗑️ Deleted"); await refreshDash(); loadPublic(); }catch(e){ toast("❌ Could not delete"); }
@@ -462,7 +467,7 @@ async function dropReport(id){ try{ await window.cloud.delReport(id); reports=re
 
 function drow(a){
   const adm=isAdmin(), pub=a.status==="published";
-  return `<div class="drow"><div class="ico" style="background:${grad(a)}" onclick="openApp('${a.id}')">${icon(a)}</div><div class="meta"><b>${esc(a.name)}</b> <span class="st" style="background:var(--card)">${a.type==="apk"?"🤖 APK":"🌐 Web"}</span> <span class="st ${pub?"ok":"wait"}">${pub?"✔ Published":"⏳ Pending"}</span><small>⭐ ${rt(a)} • ${fmt(dl(a))} downloads • v${esc(a.version)}${adm&&a.dev?" • "+esc(a.dev):""}</small><div class="acts"><button onclick="editApp('${a.id}')">✏️ Edit</button>${adm?(pub?`<button onclick="setStatus('${a.id}','pending')">🙈 Hide</button>`:`<button class="ok" onclick="setStatus('${a.id}','published')">✅ Publish</button>`)+`<button onclick="toggleFeat('${a.id}')">${a.featured?"⭐ Unfeature":"☆ Feature"}</button>`:""}<button class="bad" onclick="delApp('${a.id}')">🗑️</button></div></div></div>`;
+  return `<div class="drow"><div class="ico" style="background:${grad(a)}" onclick="openApp('${a.id}')">${icon(a)}</div><div class="meta"><b>${esc(a.name)}</b> <span class="st" style="background:var(--card)">${kindTxt(a)}</span> <span class="st ${pub?"ok":"wait"}">${pub?"✔ Published":"⏳ Pending"}</span><small>⭐ ${rt(a)} • ${fmt(dl(a))} downloads • v${esc(a.version)}${adm&&a.dev?" • "+esc(a.dev):""}</small><div class="acts"><button onclick="editApp('${a.id}')">✏️ Edit</button>${adm?(pub?`<button onclick="setStatus('${a.id}','pending')">🙈 Hide</button>`:`<button class="ok" onclick="setStatus('${a.id}','published')">✅ Publish</button>`)+`<button onclick="toggleFeat('${a.id}')">${a.featured?"⭐ Unfeature":"☆ Feature"}</button>`:""}<button class="bad" onclick="delApp('${a.id}')">🗑️</button></div></div></div>`;
 }
 function ovHTML(){
   const pubs=adminApps.filter(a=>a.status==="published"), pend=adminApps.length-pubs.length;
@@ -497,9 +502,9 @@ function formHTML(){
   const v=(k,d="")=>esc(e[k]!=null?e[k]:d);
   const pi=Math.max(0,PALETTE.findIndex(p=>e.color&&p[0]===e.color[0]));
   const sel=(a,b)=>a===b?"selected":"";
-  const ft = editing ? (editing.type==="apk"?"apk":"web") : (dtab==="newapk"?"apk":"web");
+  
   return `<div class="form">
-    <div class="card2" style="margin:0">${ft==="apk"?"🤖 <b>Android APK</b> - users download the .apk file and install it. Host the file on GitHub Releases and paste the direct download link below.":"🌐 <b>Web app</b> - users open your link. They can add it to their home screen from the browser menu."}</div>
+    <div class="card2" style="margin:0">Add the <b>web link</b>, the <b>APK link</b>, or both. Users will see both options on the app page. For the APK, host the file on GitHub Releases and paste the direct download link.</div>
     <div class="lbl">App name *</div><input id="f_name" maxlength="80" value="${v("name")}">
     <div class="lbl">Short description</div><input id="f_desc" maxlength="120" value="${v("desc")}">
     <div class="lbl">Full description</div><textarea id="f_long" rows="4" maxlength="1500">${v("long")}</textarea>
@@ -507,8 +512,9 @@ function formHTML(){
     <div class="lbl">Icon image link (optional, https://...)</div><input id="f_icon" value="${v("icon")}">
     <div class="lbl">Color</div><select id="f_color">${PAL_NAMES.map((n,i)=>`<option value="${i}" ${i===pi?"selected":""}>${n}</option>`).join("")}</select>
     <div class="lbl">Category</div><input id="f_cat" list="catl" maxlength="30" value="${v("cat")}"><datalist id="catl">${cats().slice(1).map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
-    <input type="hidden" id="f_type" value="${ft}">
-    <div class="lbl">${ft==="apk"?"APK download link (direct link to the .apk file, https://...)":"Web app link (https://...)"}</div><input id="f_link" value="${v("link")}">
+    
+    <div class="lbl">Web app link (https://...)</div><input id="f_link" value="${v("link")==="#"?"":v("link")}">
+    <div class="lbl">Android APK link (direct link to the .apk file, https://...)</div><input id="f_apk" value="${v("apk")==="#"?"":v("apk")}">
     <div class="lbl">Version</div><input id="f_ver" value="${v("version","1.0.0")}">
     <div class="lbl">Size</div><input id="f_size" value="${v("size","3 MB")}">
     <div class="lbl">What's new</div><textarea id="f_new" rows="2" maxlength="300">${v("whatsnew")}</textarea>
@@ -527,6 +533,8 @@ function readForm(){
   const name=g("name").trim(); if(!name){ toast("Enter the app name"); return null; }
   const link=g("link").trim();
   if(link&&link!=="#"&&!/^https?:\/\//i.test(link)){ toast("The link must start with https://"); return null; }
+  const apk=g("apk").trim();
+  if(apk&&apk!=="#"&&!/^https?:\/\//i.test(apk)){ toast("The APK link must start with https://"); return null; }
   const u=user||{uid:"local",email:"",name:"You"};
   const adm=isAdmin()||!CLOUD, old=editing||{};
   let id=old.id;
@@ -538,7 +546,7 @@ function readForm(){
   const el=$("#f_feat");
   return {
     id, name, dev: old.dev||u.name||"Developer", icon:isImgRef(g("icon").trim())?g("icon").trim():"", banner:isImgRef(g("banner").trim())?g("banner").trim():"",
-    color: PALETTE[Number(g("color"))||0], cat:g("cat").trim()||"Other", type:g("type")==="apk"?"apk":"web", link:link||"#",
+    color: PALETTE[Number(g("color"))||0], cat:g("cat").trim()||"Other", type:(apk&&!link)?"apk":"web", link:link||"#", apk:apk||"#",
     version:g("ver").trim()||"1.0.0", size:g("size").trim()||"3 MB", desc:g("desc").trim(), long:g("long").trim()||g("desc").trim(),
     whatsnew:g("new").trim(), perms:list(g("perms"),","), screenshots:list(g("shots"),"\n").filter(isImgRef),
     video:/^[\w-]{6,15}$/.test(g("video").trim())?g("video").trim():"", updated:new Date().toISOString().slice(0,10),
@@ -617,8 +625,15 @@ function paintMine(id){
   const t=$("#rt"); if(t&&CLOUD) drafts[id]=t.value;
   const b=$("#myrev"); if(b) b.innerHTML=mineHTML(id);
 }
+const SHOT_P={};
+function ensureShots(a){
+  const f=(typeof TOOL_SHOTS!=="undefined")&&TOOL_SHOTS[a.id];
+  if(!f||IMGV(a.id+"-1")) return;
+  if(!SHOT_P[f]) SHOT_P[f]=new Promise(res=>{ const s=document.createElement("script"); s.src=f; s.onload=()=>res(true); s.onerror=()=>{ delete SHOT_P[f]; res(false); }; document.head.appendChild(s); });
+  SHOT_P[f].then(ok=>{ if(ok&&cur&&cur.id===a.id&&detailOpen) openApp(a.id); });
+}
 function openApp(id){
-  const a=byId(id); if(!a) return; cur=a;
+  const a=byId(id); if(!a) return; cur=a; ensureShots(a);
   if(tab==="search"&&query.trim()){ hist=[query.trim(),...hist.filter(h=>h!==query.trim())].slice(0,6); ls.set("hist",hist); }
   if(!detailOpen){ try{ history.pushState({d:1},""); }catch(e){} detailOpen=true; }
   const rs=reviewsOf(id);
@@ -626,15 +641,16 @@ function openApp(id){
   const shotArr=shotsOf(a);
   const shots=shotArr.map((s,i)=>`<div class="shot" onclick="viewShots(${i})"><img src="${esc(s)}" alt=""></div>`).join("");
   const similar=all().filter(x=>x.id!==id&&x.cat===a.cat);
-  const btnTxt = paid&&!isIn ? `💬 ${priceTxt(a)} • Contact to buy` : upd ? "🔄 Update" : isIn ? (a.type==="apk"?"Download again":"▶️ Open") : (a.type==="apk"?"⬇️ Download APK":"🌐 Open app");
+  const wOk=hasWeb(a), kOk=hasApk(a), webTxt = paid&&!isIn ? `Contact to buy (${priceTxt(a)})` : "Open web app";
   const waLink = STORE.whatsapp ? `https://wa.me/${encodeURIComponent(STORE.whatsapp)}?text=${encodeURIComponent("Hello, I would like to know about "+a.name+" app")}` : "";
   const unpub = a.status && a.status!=="published";
   $("#detail").innerHTML=`<div class="dwrap">
     <div class="dbar"><button class="iconbtn" onclick="closeApp()">←</button><button class="iconbtn" onclick="shareApp()">${svgI(SVG.share)}</button></div>
     ${bannerSrc(a)&&cssUrl(bannerSrc(a))?`<div class="dbanner" style="background-image:url('${cssUrl(bannerSrc(a))}')"></div>`:""}
-    <div class="dhead"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><div><h1>${esc(a.name)}</h1><div class="dev">${esc(a.dev)}</div><div class="cat">${esc(a.cat)} • ${a.type==="apk"?"APK":"Web app"} ${badge(a)}${unpub?` <span class="st wait">⏳ Pending (preview)</span>`:""}</div></div></div>
+    <div class="dhead"><div class="ico" style="background:${grad(a)}">${icon(a)}</div><div><h1>${esc(a.name)}</h1><div class="dev">${esc(a.dev)}</div><div class="cat">${esc(a.cat)} • ${kindTxt(a)} ${badge(a)}${unpub?` <span class="st wait">⏳ Pending (preview)</span>`:""}</div></div></div>
     <div class="stats"><div><b id="avgb">⭐ ${rt(a)}</b><span id="revcnt">${bn(rs.length)} reviews</span></div><div><b>${fmt(dl(a))}</b><span>Downloads</span></div><div><b>${esc(a.size)}</b><span>Size</span></div><div><b>${esc(a.version)}</b><span>Version</span></div></div>
-    <div class="actions"><button class="install" id="ibtn" onclick="installApp()"><div class="bar" id="ibar"></div><span id="itxt">${btnTxt}</span></button><button class="sq" onclick="toggleWish()">${isW?"❤️":"🤍"}</button></div>
+    <div class="actions"><button class="install ${wOk?"":"off"}" id="ibtn" onclick="openWeb()"><span>${webTxt}</span></button><button class="sq" onclick="toggleWish()">${isW?"❤️":"🤍"}</button></div>
+    <div class="actions" style="margin-top:10px"><button class="install apk ${kOk?"":"off"}" onclick="getApk()"><span>${kOk?"Download Android APK":"Android APK - coming soon"}</span></button></div>
     ${isIn?`<div class="actions" style="margin-top:10px"><button class="btn alt" style="flex:1" onclick="uninstall()">🗑️ Remove from library</button></div>`:""}
     ${waLink?`<div style="padding:10px 16px 0"><a class="btn wa" href="${waLink}" target="_blank" rel="noopener">💬 Contact on WhatsApp</a></div>`:""}
     ${installHelp(a)}
@@ -681,36 +697,31 @@ function countDownload(a){
     if(window.cloud) window.cloud.bump(a.id,1,0,0).catch(()=>{});
   } else a.downloads=(a.downloads||0)+1;
 }
-function installApp(){
-  const a=cur, btn=$("#ibtn"), bar=$("#ibar"), txt=$("#itxt"), isIn=installed.includes(a.id);
-  if(btn.dataset.busy) return;
-  if(a.status&&a.status!=="published"){ toast("This app is not published yet"); return; }
-  if(a.price>0 && !isIn){
+function markUsed(a){ if(!installed.includes(a.id)){ installed.push(a.id); countDownload(a); addXP(20); } iver[a.id]=a.version; persist(); vib(40); }
+function canUse(a){
+  if(!a) return false;
+  if(a.status&&a.status!=="published"){ toast("This app is not published yet"); return false; }
+  if(a.price>0 && !installed.includes(a.id)){
     if(STORE.whatsapp) window.open(`https://wa.me/${encodeURIComponent(STORE.whatsapp)}?text=${encodeURIComponent(a.name+" - I want to buy this app ("+priceTxt(a)+")")}`,"_blank");
     else toast("This is a paid app. Contact the owner");
-    return;
+    return false;
   }
-  const link=safeUrl(a.link);
-  if(link==="#"){ toast("⚠️ This app has no link yet, so it cannot be opened or downloaded. The owner needs to add the link."); return; }
-  if(a.type==="apk" && /github\.com\/[^/]+\/[^/]+\/blob\//.test(link)){ toast("This is a GitHub page link, not the APK file. Use the Releases download link."); return; }
-  if(isIn && !hasUpdate(a) && a.type==="web"){ if(link!=="#") window.open(link,"_blank"); else toast("⚠️ No link has been added yet"); return; }
-  btn.dataset.busy=1; let p=0; const wasNew=!isIn;
-  const iv=setInterval(()=>{
-    p+=6+Math.random()*10; if(p>100) p=100;
-    bar.style.width=p+"%"; txt.textContent=(a.type==="apk"?"Downloading ":"Opening ")+bn(Math.round(p))+"%";
-    if(p>=100){
-      clearInterval(iv); delete btn.dataset.busy;
-      if(wasNew){ installed.push(a.id); countDownload(a); }
-      iver[a.id]=a.version; persist(); vib(60);
-      if(link!=="#"){
-        if(a.type==="apk"){ const l=document.createElement("a"); l.href=link; l.download=""; document.body.appendChild(l); l.click(); l.remove(); }
-        else window.open(link,"_blank");
-      } else toast("⚠️ No link has been added for this app yet");
-      confetti(); if(wasNew) addXP(20); else toast("✅ Updated");
-      openApp(a.id); render();
-    }
-  },160);
+  return true;
 }
+function openWeb(){
+  const a=cur; if(!canUse(a)) return;
+  const l=safeUrl(a.link);
+  if(l==="#"){ toast("The web version of this app is not available yet."); return; }
+  markUsed(a); window.open(l,"_blank"); openApp(a.id); render();
+}
+function getApk(){
+  const a=cur; if(!canUse(a)) return;
+  const l=safeUrl(a.apk);
+  if(l==="#"){ toast("The Android APK is not available yet. Please use the web app for now."); return; }
+  if(/github\.com\/[^/]+\/[^/]+\/blob\//.test(l)){ toast("This is a GitHub page link, not the APK file. Use the Releases download link."); return; }
+  markUsed(a); const x=document.createElement("a"); x.href=l; x.download=""; document.body.appendChild(x); x.click(); x.remove(); openApp(a.id); render();
+}
+function installApp(){ openWeb(); }
 function uninstall(){ installed=installed.filter(x=>x!==cur.id); delete iver[cur.id]; persist(); toast("Removed"); openApp(cur.id); render(); }
 function toggleWish(){ const add=!wish.includes(cur.id); wish=add?[...wish,cur.id]:wish.filter(x=>x!==cur.id); persist(); if(add) addXP(3); else toast("Removed"); openApp(cur.id); render(); }
 
