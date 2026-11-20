@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1020"><title>Nexus Watch</title>
+<style>
+:root{--bg:#0b1020;--card:#131a30;--line:#222c4a;--tx:#e8ecf8;--mu:#8b97b8;--ac:#6366f1;--ac2:#ec4899}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:40px}
+header{position:sticky;top:0;z-index:6;background:rgba(11,16,32,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px}
+.top{display:flex;align-items:center;gap:10px}.back{border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:10px;padding:7px 11px;font-size:13px;text-decoration:none}
+.brand{font-weight:800;font-size:17px;flex:1;letter-spacing:.2px}.brand b{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sr{display:flex;gap:8px;margin-top:9px}.sr input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:10px 12px;font-size:15px}.sr button{border:0;border-radius:12px;padding:0 16px;background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;font-weight:700}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 14px 4px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}.chip.on{background:linear-gradient(90deg,var(--ac),var(--ac2));border-color:transparent;color:#fff}
+.hero{margin:10px 14px;border-radius:18px;padding:16px;color:#fff}.hero h2{margin:0 0 4px;font-size:20px}.hero p{margin:0;opacity:.92;font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 14px}@media(min-width:640px){.grid{grid-template-columns:repeat(4,1fr)}}
+.cd{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;position:relative}
+.th{position:relative;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:30px;color:#ffffffcc}.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pl{position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:50%;background:#000a;display:flex;align-items:center;justify-content:center}.pl:after{content:"";border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px}
+.ct{padding:9px 10px 11px}.ct b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;line-height:1.3}.ct span{color:var(--mu);font-size:12px}
+.more{display:block;margin:14px auto;border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:12px;padding:12px 26px;font-weight:700}
+.msg{margin:30px 20px;text-align:center;color:var(--mu)}.msg b{color:var(--tx);display:block;margin-bottom:6px;font-size:16px}
+.sk{height:150px;border-radius:14px;background:linear-gradient(90deg,#131a30,#1b2442,#131a30);background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
+#pv{display:none}#pv.on{display:block}.vw{position:relative;aspect-ratio:16/9;background:#000}.vw iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pi{padding:12px 14px}.pi h1{font-size:18px;margin:0 0 6px;line-height:1.3}.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.btn{border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:12px;padding:10px 14px;font-weight:700;font-size:13px;text-decoration:none}.btn.p{background:linear-gradient(90deg,var(--ac),var(--ac2));border-color:transparent;color:#fff}
+.h3{font-weight:800;margin:14px 14px 4px;font-size:15px}.foot{margin:22px 16px 0;color:var(--mu);font-size:12px;line-height:1.5}
+</style></head><body>
+<header><div class="top"><a class="back" href="index.html">Store</a><div class="brand"><b>Nexus</b> Watch</div><button class="back" id="home" style="display:none">Home</button></div>
+<form class="sr" id="sf"><input id="q" type="search" placeholder="Search in this channel" autocomplete="off"><button>Search</button></form></header>
+<div id="lv"><div class="chips" id="ch"></div><div class="hero" id="hero"></div><div class="grid" id="g"></div><button class="more" id="mr" style="display:none">Load more</button><div id="ms"></div></div>
+<div id="pv"><div class="vw"><iframe id="fr" allowfullscreen allow="fullscreen; autoplay; picture-in-picture"></iframe></div><div class="pi"><h1 id="pt"></h1><div class="sub" id="pm" style="color:var(--mu);font-size:13px"></div><div class="row"><button class="btn p" id="sv">Save</button><a class="btn" id="oa" target="_blank" rel="noopener">Open on archive.org</a><button class="btn" id="bk">Back to list</button></div></div><div class="h3">More in this channel</div><div class="grid" id="rel"></div></div>
+<p class="foot">Nexus Watch does not store or upload any video. Everything is streamed from the Internet Archive, which hosts free, public-domain and openly licensed films. Titles and availability come from the Internet Archive and can change. If you find something that should not be there, use the report link on its archive.org page.</p>
+<script>
+const CH=[
+{id:"classic",n:"Classic Movies",q:"collection:feature_films",c:["#6366f1","#312e81"],d:"Full-length classic feature films that are free to watch"},
+{id:"silent",n:"Silent Films",q:"collection:silent_films",c:["#f59e0b","#78350f"],d:"The earliest days of cinema, from before sound"},
+{id:"horror",n:"Horror Classics",q:"collection:feature_films AND subject:horror",c:["#dc2626","#450a0a"],d:"Old horror movies from the black and white era"},
+{id:"scifi",n:"Sci-Fi Classics",q:"collection:feature_films AND subject:(science fiction OR sci-fi)",c:["#06b6d4","#1e1b4b"],d:"Rockets, robots and aliens from vintage science fiction"},
+{id:"comedy",n:"Comedy",q:"collection:feature_films AND subject:comedy",c:["#eab308","#a16207"],d:"Classic comedies to make you laugh"},
+{id:"western",n:"Westerns",q:"collection:feature_films AND subject:western",c:["#ea580c","#7c2d12"],d:"Cowboys, outlaws and the old west"},
+{id:"noir",n:"Film Noir and Crime",q:"collection:feature_films AND subject:(noir OR crime OR mystery)",c:["#64748b","#0f172a"],d:"Dark detective stories and crime dramas"},
+{id:"cartoons",n:"Cartoons",q:"collection:animationandcartoons",c:["#ec4899","#7c3aed"],d:"Vintage cartoons and animation"},
+{id:"tv",n:"Old TV Shows",q:"collection:classic_tv",c:["#14b8a6","#134e4a"],d:"Episodes of classic television"},
+{id:"docs",n:"Documentaries",q:"mediatype:movies AND subject:documentary",c:["#22c55e","#14532d"],d:"Real stories, nature and history"},
+{id:"space",n:"Space and Science",q:"collection:nasa",c:["#3b82f6","#0f172a"],d:"NASA missions, rockets and science films"},
+{id:"music",n:"Music and Arts",q:"collection:artsandmusicvideos",c:["#a855f7","#4a044e"],d:"Concerts, music videos and arts"},
+{id:"news",n:"News and History",q:"collection:newsandpublicaffairs",c:["#ef4444","#7f1d1d"],d:"Old newsreels and public affairs films"},
+{id:"learn",n:"Learn and How-To",q:"collection:prelinger",c:["#84cc16","#365314"],d:"Educational films and how-to videos from the past"},
+{id:"open",n:"Open Movies",q:"collection:opensource_movies",c:["#f472b6","#1e3a8a"],d:"Short films and open-licence movies made by creators"}];
+const $=s=>document.querySelector(s),esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ST={get(k,d){try{const v=localStorage.getItem("nw_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("nw_"+k,JSON.stringify(v))}catch(e){}}};
+const SAFE=" AND mediatype:movies AND NOT subject:(adult OR erotica OR nudity OR xxx)";
+let cur="classic",term="",page=1,total=0,items=[],busy=false,view="ch";
+const saved=()=>ST.get("fav",[]),hist=()=>ST.get("hist",[]);
+const grad=(c,i)=>"linear-gradient("+(120+(i||0)*37%90)+"deg,"+c[0]+","+c[1]+")";
+function chInfo(id){return CH.find(c=>c.id===id)||CH[0]}
+function chips(){const a=CH.map(c=>`<div class="chip${c.id===cur&&view==="ch"?" on":""}" data-c="${c.id}">${esc(c.n)}</div>`);a.push(`<div class="chip${view==="fav"?" on":""}" data-c="_fav">Saved</div>`,`<div class="chip${view==="hist"?" on":""}" data-c="_hist">Recent</div>`);$("#ch").innerHTML=a.join("");$("#ch").querySelectorAll(".chip").forEach(e=>e.onclick=()=>{const k=e.dataset.c;if(k==="_fav"){view="fav";show()}else if(k==="_hist"){view="hist";show()}else go(k)});const on=$("#ch .chip.on");if(on)$("#ch").scrollLeft=Math.max(0,on.offsetLeft-60)}
+function card(it,i,c){const t=esc(it.title||it.identifier);return `<div class="cd" data-id="${esc(it.identifier)}" data-t="${t}"><div class="th" style="background:${grad(c,i)}">${esc((it.title||"?").trim().charAt(0).toUpperCase())}<img loading="lazy" alt="" src="https://archive.org/services/img/${encodeURIComponent(it.identifier)}" onerror="this.remove()"><span class="pl"></span></div><div class="ct"><b>${t}</b><span>${it.year?esc(it.year)+" · ":""}${it.downloads?fnum(it.downloads)+" views":"Free to watch"}</span></div></div>`}
+const fnum=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":""+n;
+function bind(box){box.querySelectorAll(".cd").forEach(e=>e.onclick=()=>play(e.dataset.id,e.dataset.t))}
+function render(){const c=chInfo(cur);$("#hero").style.background=grad(c.c,0);$("#hero").innerHTML=`<h2>${esc(c.n)}</h2><p>${esc(c.d)}${term?" · Search: "+esc(term):""}</p>`;$("#g").innerHTML=items.map((it,i)=>card(it,i,c.c)).join("");bind($("#g"));$("#mr").style.display=items.length<total?"block":"none"}
+const key=()=>cur+"|"+term+"|"+page;
+async function load(more){if(busy)return;busy=true;const c=chInfo(cur);$("#ms").innerHTML="";if(!more){page=1;items=[];$("#g").innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div>';$("#mr").style.display="none"}else page++;
+ let q="("+c.q+")"+SAFE;if(term){const t=term.replace(/["\\()]/g," ").trim();if(t)q+=' AND (title:("'+t+'") OR subject:("'+t+'") OR description:("'+t+'"))'}
+ const u="https://archive.org/advancedsearch.php?q="+encodeURIComponent(q)+"&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year&fl%5B%5D=downloads&sort%5B%5D="+encodeURIComponent(term?"downloads desc":"downloads desc")+"&rows=24&page="+page+"&output=json";
+ try{const ck="nwc:"+u;let d=null;try{d=JSON.parse(sessionStorage.getItem(ck)||"null")}catch(e){}if(!d){const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);const r=await fetch(u,{signal:ac.signal});clearTimeout(tm);if(!r.ok)throw new Error("HTTP "+r.status);d=await r.json();try{sessionStorage.setItem(ck,JSON.stringify(d))}catch(e){}}
+  const docs=(d.response&&d.response.docs)||[];total=(d.response&&d.response.numFound)||0;const seen=new Set(items.map(i=>i.identifier));docs.forEach(x=>{if(!seen.has(x.identifier))items.push(x)});render();
+  if(!items.length)$("#ms").innerHTML='<div class="msg"><b>Nothing found</b>Try another word or another channel.</div>'}
+ catch(e){if(more)page--;render();$("#ms").innerHTML='<div class="msg"><b>Could not load videos</b>Check your internet connection and try again.<br><br><button class="more" id="rt">Try again</button></div>';$("#rt").onclick=()=>load(more)}
+ busy=false}
+function go(id){cur=id;term="";view="ch";$("#q").value="";location.hash=id;show();load(false)}
+function list(box,arr){const c=chInfo(cur);box.innerHTML=arr.length?arr.map((it,i)=>card({identifier:it.id,title:it.t},i,c.c)).join(""):'<div class="msg" style="grid-column:1/-1"><b>Nothing here yet</b>Open a video and tap Save to keep it here.</div>';bind(box)}
+function show(){$("#pv").classList.remove("on");$("#lv").style.display="block";$("#home").style.display="none";$("#fr").src="about:blank";chips();if(view==="fav"){$("#hero").style.background=grad(["#ec4899","#6366f1"],0);$("#hero").innerHTML="<h2>Saved</h2><p>Videos you saved on this phone</p>";list($("#g"),saved());$("#mr").style.display="none";$("#ms").innerHTML=""}else if(view==="hist"){$("#hero").style.background=grad(["#14b8a6","#6366f1"],0);$("#hero").innerHTML="<h2>Recent</h2><p>What you watched lately</p>";list($("#g"),hist());$("#mr").style.display="none";$("#ms").innerHTML=""}else if(items.length)render()}
+function play(id,t){const h=hist().filter(x=>x.id!==id);h.unshift({id,t});ST.set("hist",h.slice(0,30));$("#lv").style.display="none";$("#pv").classList.add("on");$("#home").style.display="block";$("#fr").src="https://archive.org/embed/"+encodeURIComponent(id);$("#pt").textContent=t;$("#pm").textContent="Channel: "+chInfo(cur).n;$("#oa").href="https://archive.org/details/"+encodeURIComponent(id);const upd=()=>{$("#sv").textContent=saved().some(x=>x.id===id)?"Saved (tap to remove)":"Save"};upd();$("#sv").onclick=()=>{let s=saved();if(s.some(x=>x.id===id))s=s.filter(x=>x.id!==id);else s.unshift({id,t});ST.set("fav",s);upd()};const c=chInfo(cur);const r=items.filter(x=>x.identifier!==id).slice(0,8);$("#rel").innerHTML=r.map((it,i)=>card(it,i,c.c)).join("");$("#rel").querySelectorAll(".cd").forEach(e=>e.onclick=()=>{play(e.dataset.id,e.dataset.t);scrollTo(0,0)});scrollTo(0,0)}
+$("#bk").onclick=()=>{view=view==="ch"?"ch":view;show()};$("#home").onclick=$("#bk").onclick;$("#mr").onclick=()=>load(true);
+$("#sf").onsubmit=e=>{e.preventDefault();if(view!=="ch"){view="ch";chips()}term=$("#q").value.trim();show();load(false)};
+function fromHash(){const h=decodeURIComponent(location.hash.slice(1));if(CH.some(c=>c.id===h))cur=h}
+addEventListener("hashchange",()=>{const o=cur;fromHash();if(o!==cur){term="";view="ch";show();load(false)}});
+fromHash();chips();load(false);window.__nw={get:()=>({cur,term,items,total,view}),go,play};
+</script></body></html>
