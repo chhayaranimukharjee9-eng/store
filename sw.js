@@ -1,5 +1,5 @@
-const CACHE = "nexus-store-v17";
-const FILES = ["./", "index.html", "apps.js", "assets.js", "tools-assets.js", "tools.html", "clipstudio.html", "watch.html", "nexuscut.html", "manifest.json"];
+const CACHE = "nexus-store-v19";
+const FILES = ["./", "index.html", "apps.js", "assets.js", "tools-assets.js", "tools.html", "clipstudio.html", "watch.html", "nexuscut.html", "citygame.html", "desibike.html", "manifest.json"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
