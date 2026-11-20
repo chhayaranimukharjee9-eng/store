@@ -1,4 +1,4 @@
-const CACHE = "nexus-store-v19";
+const CACHE = "nexus-store-v20";
 const FILES = ["./", "index.html", "apps.js", "assets.js", "tools-assets.js", "tools.html", "clipstudio.html", "watch.html", "nexuscut.html", "citygame.html", "desibike.html", "manifest.json"];
 
 self.addEventListener("install", e => {
